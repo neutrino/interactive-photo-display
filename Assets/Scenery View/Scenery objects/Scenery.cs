@@ -6,18 +6,15 @@ public class Scenery : MonoBehaviour
 {
     
     public Vector3 movementInput = Vector3.zero;
-    public Vector3 movementAmount = Vector3.one;
-    public Vector3 movementOffset = Vector3.zero;
-
-    [Space]
     public float minImageDepth = -1;
     public float maxImageDepth = 0;
 
     [Header("Kinect input")]
     public bool useKinectInput = false;
-    public BodySourceView bodySourceView;
-    public Kinect.JointType trackedJointType = Kinect.JointType.Head;
-
+    public Vector3 inputMultiplier = Vector3.one;
+    public Vector3 inputOffset = Vector3.zero;
+    public float inputSmoothing = 10;
+    public BodyTracker bodyTracker;
 
     SceneryImage[] sceneryImages;
     Vector3 previousMousePosition;
@@ -27,6 +24,11 @@ public class Scenery : MonoBehaviour
     {
         previousMousePosition = Input.mousePosition;
         sceneryImages = GetComponentsInChildren<SceneryImage>();
+        
+        if (bodyTracker == null)
+        {
+            Debug.Log("No body tracker assigned!");
+        }
     }
     void OnValidate()
     {
@@ -35,15 +37,13 @@ public class Scenery : MonoBehaviour
 
     void Update()
     {
-        // Get kinect input
-        if (useKinectInput && bodySourceView != null)
+        // Get Kinect input
+        if (useKinectInput && bodyTracker != null)
         {
-            Kinect.Joint[] joints = bodySourceView.GetJoints(trackedJointType);
-            if (joints.Length > 0)
-            {
-                movementInput.x = -joints[0].Position.X;
-                movementInput.y = -joints[0].Position.Y;
-            }
+            Vector3 position = inputOffset;
+            position += BodyTracker.BodyPosition(bodyTracker.NearestBody());
+            position = Vector3.Scale(position, inputMultiplier);
+            movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * inputSmoothing);
         }
         // Get mouse input
         else if (Input.GetMouseButton(0))
@@ -58,9 +58,10 @@ public class Scenery : MonoBehaviour
             float depth = sceneryImage.transform.localPosition.z;
             float depthMultiplier = 1 - Mathf.InverseLerp(minImageDepth, maxImageDepth, depth);
 
-            // Set the image's new position according to offset, input, panning amount and depth.
-            Vector3 movement = (Vector3.Scale(movementInput, movementAmount) + movementOffset) * depthMultiplier;
-            sceneryImage.SetRelativePosition(movement);
+            // Set the image's new position and scale according to input and depth.
+            Vector3 position = movementInput * depthMultiplier;
+            position.z = 0;
+            sceneryImage.SetRelativePosition(position);
 
             Vector3 scale = Vector3.one * (1 + depthMultiplier * movementInput.z);
             sceneryImage.SetRelativeScale(scale);
