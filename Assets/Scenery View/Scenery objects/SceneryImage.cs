@@ -2,9 +2,19 @@
 using System.Collections;
 using System.IO;
 
+[System.Serializable]
+public class SceneryImageData
+{
+    public float x, y, z;
+    public float rotation;
+    public string fileName;
+}
+
 public class SceneryImage : MonoBehaviour
 {
-    public string imagePath;
+    public string fileName;
+
+    public SceneryImageData data = new SceneryImageData();
 
     // Starting transform values used for relative transforming after initialization.
     Vector3 startingPosition;
@@ -19,13 +29,23 @@ public class SceneryImage : MonoBehaviour
         // If we're running outside the Unity editor, load the image (because it might not have been loaded from the editor before building).
         if (!Application.isEditor)
         {
-            LoadImage(imagePath);
+            LoadImage();
         }
     }
 
     // Load an image from any local image file to a texture, create a sprite from it and assign that to this scenery image.
-    public void LoadImage(string path)
+    public void LoadImage()
     {
+        string path = "";
+        Transform parent = transform.parent;
+        if (parent != null)
+        {
+            Scenery scenery = parent.GetComponent<Scenery>();
+            if (scenery != null)
+            {
+                path = System.IO.Path.GetDirectoryName(scenery.FilePath()) + "\\" + fileName;
+            }
+        }
         if (File.Exists(path))
         {
             // First unload any previously loaded image.
@@ -68,4 +88,19 @@ public class SceneryImage : MonoBehaviour
         transform.localScale = newScale;
     }
 
+    public void UpdateData()
+    {
+        data.x = transform.position.x;
+        data.y = transform.position.y;
+        data.z = transform.position.z;
+        data.rotation = transform.rotation.eulerAngles.z;
+        data.fileName = fileName;
+    }
+    public void UpdateFromData()
+    {
+        transform.position = new Vector3(data.x, data.y, data.z);
+        transform.rotation = Quaternion.Euler(0, 0, data.rotation);
+        fileName = data.fileName;
+        LoadImage();
+    }
 }

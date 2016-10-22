@@ -6,6 +6,9 @@ using UnityEditor;
 public class SceneryEditor : Editor
 {
 
+    string sourcePath;
+    string targetPath;
+
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
@@ -14,19 +17,17 @@ public class SceneryEditor : Editor
 
         GUILayout.Space(20);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Load all scenery images"))
+        targetPath = EditorGUILayout.TextField(targetPath);
+        if (GUILayout.Button("Save scenery"))
         {
-            foreach (SceneryImage SI in scenery.SceneryImages())
-            {
-                SI.LoadImage(SI.imagePath);
-            }
+            scenery.SaveScenery(targetPath);
         }
-        if (GUILayout.Button("Unload all scenery images"))
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        sourcePath = EditorGUILayout.TextField(sourcePath);
+        if (GUILayout.Button("Load scenery"))
         {
-            foreach (SceneryImage sceneryImage in scenery.SceneryImages())
-            {
-                sceneryImage.UnloadImage();
-            }
+            scenery.LoadScenery(sourcePath);
         }
         GUILayout.EndHorizontal();
     }
