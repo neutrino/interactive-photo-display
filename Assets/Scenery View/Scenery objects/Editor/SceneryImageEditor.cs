@@ -13,7 +13,7 @@ public class SceneryImageEditor : Editor
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Load image"))
         {
-            sceneryImage.LoadImage(sceneryImage.imagePath);
+            sceneryImage.LoadImage();
         }
         if (GUILayout.Button("Unload image"))
         {
