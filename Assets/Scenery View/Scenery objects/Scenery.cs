@@ -2,18 +2,16 @@
 using System.Collections;
 using Kinect = Windows.Kinect;
 
+// The serialized data object for saving and loading the scenery
 [System.Serializable]
-public class SceneryData
+public class SceneryData : SceneryObjectData
 {
-    [System.Serializable]
-    public struct SceneryImageList
-    {
-        public SceneryImageData[] list;
-    }
-    public SceneryImageList sceneryImages;
+    public SceneryImageData[] images;
 }
 
-public class Scenery : MonoBehaviour
+
+
+public class Scenery : MonoBehaviour, SceneryObject
 {
 
     public GameObject sceneryImagePrefab;
@@ -23,8 +21,6 @@ public class Scenery : MonoBehaviour
     public float minImageDepth = -1;
     public float maxImageDepth = 0;
 
-    public SceneryData data = new SceneryData();
-
     [Header("Kinect input")]
     public bool useKinectInput = false;
     public Vector3 inputMultiplier = Vector3.one;
@@ -32,30 +28,35 @@ public class Scenery : MonoBehaviour
     public float inputSmoothing = 10;
     public BodyTracker bodyTracker;
 
-    private string filePath;
 
-    private SceneryImage[] sceneryImages;
+    private MovableSceneryObject[] movableSceneryObjects = new MovableSceneryObject[0];
+    private string filePath;
+    private SceneryData data = new SceneryData();
+
     private Vector3 previousMousePosition;
 
     void Start()
     {
         previousMousePosition = Input.mousePosition;
-        sceneryImages = GetComponentsInChildren<SceneryImage>();
-        
+
         if (bodyTracker == null)
         {
             Debug.Log("No body tracker assigned!");
         }
-    }
-    void OnValidate()
-    {
-        sceneryImages = GetComponentsInChildren<SceneryImage>();
+
+        string[] args = System.Environment.GetCommandLineArgs();
+        if (args.Length >= 2)
+        {
+            string path = args[1];
+            if (System.IO.File.Exists(path))
+            {
+                LoadScenery(args[1]);
+            }
+        }
     }
 
     void Update()
     {
-
-        sceneryImages = GetComponentsInChildren<SceneryImage>();
 
         // Get Kinect input
         if (useKinectInput && bodyTracker != null)
@@ -68,26 +69,32 @@ public class Scenery : MonoBehaviour
         // Get mouse input
         else if (Input.GetMouseButton(0))
         {
-            movementInput += (Input.mousePosition - previousMousePosition) / 500.0f;
+            movementInput += (Input.mousePosition - previousMousePosition) / 200.0f;
         }
 
         // Move each scenery image to a new position depending on input and their depth.
-        foreach (var sceneryImage in sceneryImages)
+        foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
         {
             // The smaller the depth (closer to the camera), the faster movement.
-            float depth = sceneryImage.transform.localPosition.z;
+            float depth = movableSceneryObject.transform.localPosition.z;
             float depthMultiplier = 1 - Mathf.InverseLerp(minImageDepth, maxImageDepth, depth);
-
+            
             // Set the image's new position and scale according to input and depth.
             Vector3 position = movementInput * depthMultiplier;
             position.z = 0;
-            sceneryImage.SetRelativePosition(position);
+            movableSceneryObject.SetRelativePosition(position);
 
             Vector3 scale = Vector3.one * (1 + depthMultiplier * movementInput.z);
-            sceneryImage.SetRelativeScale(scale);
+            movableSceneryObject.SetRelativeScale(scale);
+            
         }
 
         previousMousePosition = Input.mousePosition;
+    }
+
+    void OnTransformChildrenChanged()
+    {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
     }
 
     public string FilePath()
@@ -95,45 +102,16 @@ public class Scenery : MonoBehaviour
         return filePath;
     }
 
-    public SceneryImage[] SceneryImages()
-    {
-        return sceneryImages;
-    }
-
-    public void UpdateData()
-    {
-        SceneryImage[] sceneryImages = GetComponentsInChildren<SceneryImage>();
-        data.sceneryImages.list = new SceneryImageData[sceneryImages.Length];
-        int i = 0;
-        foreach (SceneryImage sceneryImage in sceneryImages)
-        {
-            sceneryImage.UpdateData();
-            data.sceneryImages.list[i++] = sceneryImage.data;
-        }
-    }
-    public void UpdateFromData()
-    {
-        SceneryImage[] sceneryImages = GetComponentsInChildren<SceneryImage>();
-        foreach (SceneryImage sceneryImage in sceneryImages)
-        {
-            DestroyImmediate(sceneryImage.gameObject);
-        }
-        string directory = System.IO.Path.GetDirectoryName(filePath);
-        foreach (SceneryImageData sceneryImageData in data.sceneryImages.list)
-        {
-            Vector3 pos = new Vector3(sceneryImageData.x, sceneryImageData.y, sceneryImageData.z);
-            Quaternion rot = Quaternion.Euler(0, 0, sceneryImageData.rotation);
-            SceneryImage sceneryImage = ((GameObject)Instantiate(sceneryImagePrefab, transform)).GetComponent<SceneryImage>();
-            sceneryImage.data = sceneryImageData;
-            sceneryImage.UpdateFromData();
-        }
-
-        sceneryImages = GetComponentsInChildren<SceneryImage>();
-    }
-
     public void SaveScenery(string targetPath)
     {
-        UpdateData();
+        // Move movable objects back to their starting positions
+        foreach (MovableSceneryObject mso in movableSceneryObjects)
+        {
+            mso.SetRelativePosition(Vector3.zero);
+            mso.SetRelativeScale(Vector3.zero);
+        }
+
+        SyncToData();
         string json = JsonUtility.ToJson(data);
         System.IO.File.WriteAllText(targetPath, json);
     }
@@ -142,7 +120,68 @@ public class Scenery : MonoBehaviour
         filePath = sourcePath;
         string json = System.IO.File.ReadAllText(sourcePath);
         data = JsonUtility.FromJson<SceneryData>(json);
-        UpdateFromData();
+        SyncFromData();
+    }
+    // Return all scenery objects in children excluding this scenery itself
+    public SceneryObject[] GetChildSceneryObjects()
+    {
+        SceneryObject[] allSceneryObjects = GetComponentsInChildren<SceneryObject>();
+        SceneryObject[] exclusiveSceneryObjects = new SceneryObject[allSceneryObjects.Length - 1];
+        int i = 0;
+        foreach (SceneryObject sceneryObject in allSceneryObjects)
+        {
+            if (sceneryObject != this)
+            {
+                exclusiveSceneryObjects[i++] = sceneryObject;
+            }
+        }
+        return exclusiveSceneryObjects;
+    }
+
+
+    // Implementing SceneryObject interface methods
+    public void SyncToData()
+    {
+        SceneryImage[] sceneryImages = GetComponentsInChildren<SceneryImage>();
+        // Sync the current state to the data object
+        data.images = new SceneryImageData[sceneryImages.Length];
+        int i = 0;
+        foreach (SceneryImage sceneryImage in sceneryImages)
+        {
+            // Also sync all contained scenery images' data
+            sceneryImage.SyncToData();
+            data.images[i++] = (SceneryImageData)sceneryImage.GetData();
+        }
+    }
+    public void SyncFromData()
+    {
+        // Sync current status from exising data object
+        // First destroy any currently contained scenery objects
+        foreach (SceneryObject sceneryObject in GetChildSceneryObjects())
+        {
+            DestroyImmediate(((MonoBehaviour)sceneryObject).gameObject);
+        }
+
+        // Create new scenery images according to existing data
+        foreach (SceneryImageData sceneryImageData in data.images)
+        {
+            Vector3 pos = new Vector3(sceneryImageData.x, sceneryImageData.y, sceneryImageData.z);
+            Quaternion rot = Quaternion.Euler(0, 0, sceneryImageData.rotation);
+            SceneryImage sceneryImage = ((GameObject)Instantiate(sceneryImagePrefab, transform)).GetComponent<SceneryImage>();
+            if (sceneryImageData != null)
+            {
+                sceneryImage.SetData(sceneryImageData);
+                sceneryImage.SyncFromData();
+            }
+        }
+    }
+    public SceneryObjectData GetData()
+    {
+        return data;
+    }
+    public void SetData(SceneryObjectData newData)
+    {
+        data = (SceneryData)newData;
     }
 }
 

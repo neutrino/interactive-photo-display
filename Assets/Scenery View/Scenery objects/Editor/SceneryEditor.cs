@@ -6,8 +6,7 @@ using UnityEditor;
 public class SceneryEditor : Editor
 {
 
-    string sourcePath;
-    string targetPath;
+    string path;
 
     public override void OnInspectorGUI()
     {
@@ -16,19 +15,28 @@ public class SceneryEditor : Editor
         Scenery scenery = (Scenery)target;
 
         GUILayout.Space(20);
+
+        GUILayout.Label("Saving and loading the scenery externally");
+
+        // Path input field
         GUILayout.BeginHorizontal();
-        targetPath = EditorGUILayout.TextField(targetPath);
+        EditorGUILayout.PrefixLabel("Path");
+        path = EditorGUILayout.TextField(path);
+        GUILayout.EndHorizontal();
+
+        // Save and load buttons
+        GUILayout.BeginHorizontal();
+        
         if (GUILayout.Button("Save scenery"))
         {
-            scenery.SaveScenery(targetPath);
+            scenery.SaveScenery(path);
         }
-        GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal();
-        sourcePath = EditorGUILayout.TextField(sourcePath);
+        
         if (GUILayout.Button("Load scenery"))
         {
-            scenery.LoadScenery(sourcePath);
+            scenery.LoadScenery(path);
         }
+
         GUILayout.EndHorizontal();
     }
 
