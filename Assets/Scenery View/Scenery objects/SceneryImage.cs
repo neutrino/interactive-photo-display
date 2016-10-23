@@ -2,65 +2,57 @@
 using System.Collections;
 using System.IO;
 
+
+// The serialized data object for saving and loading the scenery image
 [System.Serializable]
-public class SceneryImageData
+public class SceneryImageData : SceneryObjectData
 {
     public float x, y, z;
     public float rotation;
     public string fileName;
 }
 
-public class SceneryImage : MonoBehaviour
+
+
+public class SceneryImage : MonoBehaviour, SceneryObject
 {
     public string fileName;
 
-    public SceneryImageData data = new SceneryImageData();
-
-    // Starting transform values used for relative transforming after initialization.
-    Vector3 startingPosition;
-    Vector3 startingScale;
-
-    void Start()
+    private SceneryImageData data = new SceneryImageData();
+    
+    void OnDestroy()
     {
-        // Initialize starting transform values
-        startingPosition = transform.localPosition;
-        startingScale = transform.localScale;
-
-        // If we're running outside the Unity editor, load the image (because it might not have been loaded from the editor before building).
-        if (!Application.isEditor)
-        {
-            LoadImage();
-        }
+        UnloadImage();
     }
 
     // Load an image from any local image file to a texture, create a sprite from it and assign that to this scenery image.
     public void LoadImage()
     {
-        string path = "";
-        Transform parent = transform.parent;
-        if (parent != null)
-        {
-            Scenery scenery = parent.GetComponent<Scenery>();
-            if (scenery != null)
-            {
-                path = System.IO.Path.GetDirectoryName(scenery.FilePath()) + "\\" + fileName;
-            }
-        }
-        if (File.Exists(path))
+        string absolutePath = GetAbsolutePath(fileName);
+
+        if (File.Exists(absolutePath))
         {
             // First unload any previously loaded image.
             UnloadImage();
 
             // Read the bytes from the file to a new texture.
-            byte[] imageData = File.ReadAllBytes(path);
+            byte[] imageData = File.ReadAllBytes(absolutePath);
             Texture2D texture = new Texture2D(2, 2);
-            texture.LoadImage(imageData);
+            if (!texture.LoadImage(imageData))
+            {
+                Debug.Log("Cannot load image from '" + absolutePath + "'.");
+            }
 
             // Create a sprite from the new texture.
             Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
             GetComponent<SpriteRenderer>().sprite = sprite;
         }
+        else
+        {
+            Debug.Log("File at '" + absolutePath + "' doesn't exist.");
+        }
     }
+
     // Unload and unassign the previously loaded image. Free all memory that was allocated for the image.
     public void UnloadImage()
     {
@@ -73,34 +65,55 @@ public class SceneryImage : MonoBehaviour
         }
     }
 
-    // Move the transform to a position relative to the starting position.
-    public void SetRelativePosition(Vector3 position)
+
+    private string GetAbsolutePath(string fileName)
     {
-        transform.localPosition = startingPosition + position;
-    }
-    // Scale the transform to a scale relative to the starting scale.
-    public void SetRelativeScale(Vector3 scale)
-    {
-        Vector3 newScale = startingScale;
-        newScale.x *= scale.x;
-        newScale.y *= scale.y;
-        newScale.z *= scale.z;
-        transform.localScale = newScale;
+        // If the file exists, it's already an absolute path
+        if (File.Exists(fileName))
+        {
+            return fileName;
+        }
+        else
+        {
+            // Find the file's directory from the parent (Scenery)
+            Transform parent = transform.parent;
+            if (parent != null)
+            {
+                Scenery scenery = parent.GetComponent<Scenery>();
+                if (scenery != null)
+                {
+                    return System.IO.Path.GetDirectoryName(scenery.FilePath()) + "\\" + fileName;
+                }
+            }
+        }
+        return "";
     }
 
-    public void UpdateData()
+
+    // SceneryObject interface methods
+    public void SyncToData()
     {
+        // Sync current state to the data object
         data.x = transform.position.x;
         data.y = transform.position.y;
         data.z = transform.position.z;
         data.rotation = transform.rotation.eulerAngles.z;
         data.fileName = fileName;
     }
-    public void UpdateFromData()
+    public void SyncFromData()
     {
+        // Sync state from the existing data object
         transform.position = new Vector3(data.x, data.y, data.z);
         transform.rotation = Quaternion.Euler(0, 0, data.rotation);
         fileName = data.fileName;
         LoadImage();
+    }
+    public SceneryObjectData GetData()
+    {
+        return data;
+    }
+    public void SetData(SceneryObjectData newData)
+    {
+        data = (SceneryImageData)newData;
     }
 }
