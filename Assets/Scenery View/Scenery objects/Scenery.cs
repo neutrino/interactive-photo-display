@@ -31,7 +31,6 @@ public class Scenery : MonoBehaviour, SceneryObject
 
     private MovableSceneryObject[] movableSceneryObjects = new MovableSceneryObject[0];
     private string filePath;
-    private SceneryData data = new SceneryData();
 
     private Vector3 previousMousePosition;
 
@@ -110,17 +109,15 @@ public class Scenery : MonoBehaviour, SceneryObject
             mso.SetRelativePosition(Vector3.zero);
             mso.SetRelativeScale(Vector3.zero);
         }
-
-        SyncToData();
-        string json = JsonUtility.ToJson(data);
+        
+        string json = JsonUtility.ToJson(GetData());
         System.IO.File.WriteAllText(targetPath, json);
     }
     public void LoadScenery(string sourcePath)
     {
         filePath = sourcePath;
         string json = System.IO.File.ReadAllText(sourcePath);
-        data = JsonUtility.FromJson<SceneryData>(json);
-        SyncFromData();
+        SetData(JsonUtility.FromJson<SceneryData>(json));
     }
     // Return all scenery objects in children excluding this scenery itself
     public SceneryObject[] GetChildSceneryObjects()
@@ -140,22 +137,24 @@ public class Scenery : MonoBehaviour, SceneryObject
 
 
     // Implementing SceneryObject interface methods
-    public void SyncToData()
+    public SceneryObjectData GetData()
     {
+        SceneryData sceneryData = new SceneryData();
+
         SceneryImage[] sceneryImages = GetComponentsInChildren<SceneryImage>();
-        // Sync the current state to the data object
-        data.images = new SceneryImageData[sceneryImages.Length];
+        sceneryData.images = new SceneryImageData[sceneryImages.Length];
         int i = 0;
         foreach (SceneryImage sceneryImage in sceneryImages)
         {
-            // Also sync all contained scenery images' data
-            sceneryImage.SyncToData();
-            data.images[i++] = (SceneryImageData)sceneryImage.GetData();
+            sceneryData.images[i++] = (SceneryImageData)sceneryImage.GetData();
         }
+
+        return sceneryData;
     }
-    public void SyncFromData()
+    public void SetData(SceneryObjectData sceneryObjectData)
     {
-        // Sync current status from exising data object
+        SceneryData sceneryData = (SceneryData)sceneryObjectData;
+        
         // First destroy any currently contained scenery objects
         foreach (SceneryObject sceneryObject in GetChildSceneryObjects())
         {
@@ -163,7 +162,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         }
 
         // Create new scenery images according to existing data
-        foreach (SceneryImageData sceneryImageData in data.images)
+        foreach (SceneryImageData sceneryImageData in sceneryData.images)
         {
             Vector3 pos = new Vector3(sceneryImageData.x, sceneryImageData.y, sceneryImageData.z);
             Quaternion rot = Quaternion.Euler(0, 0, sceneryImageData.rotation);
@@ -171,17 +170,8 @@ public class Scenery : MonoBehaviour, SceneryObject
             if (sceneryImageData != null)
             {
                 sceneryImage.SetData(sceneryImageData);
-                sceneryImage.SyncFromData();
             }
         }
-    }
-    public SceneryObjectData GetData()
-    {
-        return data;
-    }
-    public void SetData(SceneryObjectData newData)
-    {
-        data = (SceneryData)newData;
     }
 }
 

@@ -17,8 +17,6 @@ public class SceneryImageData : SceneryObjectData
 public class SceneryImage : MonoBehaviour, SceneryObject
 {
     public string fileName;
-
-    private SceneryImageData data = new SceneryImageData();
     
     void OnDestroy()
     {
@@ -89,31 +87,25 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         return "";
     }
 
-
     // SceneryObject interface methods
-    public void SyncToData()
-    {
-        // Sync current state to the data object
-        data.x = transform.position.x;
-        data.y = transform.position.y;
-        data.z = transform.position.z;
-        data.rotation = transform.rotation.eulerAngles.z;
-        data.fileName = fileName;
-    }
-    public void SyncFromData()
-    {
-        // Sync state from the existing data object
-        transform.position = new Vector3(data.x, data.y, data.z);
-        transform.rotation = Quaternion.Euler(0, 0, data.rotation);
-        fileName = data.fileName;
-        LoadImage();
-    }
     public SceneryObjectData GetData()
     {
-        return data;
+        // Generate a SceneryImageData with current state's information
+        SceneryImageData sceneryImageData = new SceneryImageData();
+        sceneryImageData.x = transform.position.x;
+        sceneryImageData.y = transform.position.y;
+        sceneryImageData.z = transform.position.z;
+        sceneryImageData.rotation = transform.rotation.eulerAngles.z;
+        sceneryImageData.fileName = fileName;
+        return sceneryImageData;
     }
-    public void SetData(SceneryObjectData newData)
+    public void SetData(SceneryObjectData sceneryObjectData)
     {
-        data = (SceneryImageData)newData;
+        // Modify current state to match the given data's information
+        SceneryImageData sceneryImageData = (SceneryImageData)sceneryObjectData;
+        transform.position = new Vector3(sceneryImageData.x, sceneryImageData.y, sceneryImageData.z);
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, sceneryImageData.rotation);
+        fileName = sceneryImageData.fileName;
+        LoadImage();
     }
 }

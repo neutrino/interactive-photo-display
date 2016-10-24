@@ -9,6 +9,7 @@ public class SceneryObjectData {}
 public interface SceneryObject
 {
 
+    /*
     // Sync current state to the serializable data object
     void SyncToData();
     // Sync current state from existing data
@@ -17,5 +18,9 @@ public interface SceneryObject
     SceneryObjectData GetData();
     // Set a new data object
     void SetData(SceneryObjectData newData);
+    */
+
+    SceneryObjectData GetData();
+    void SetData(SceneryObjectData sceneryObjectData);
 
 }
