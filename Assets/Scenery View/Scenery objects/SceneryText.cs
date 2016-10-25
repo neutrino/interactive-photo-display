@@ -9,6 +9,7 @@ public class SceneryTextData : SceneryObjectData
     public float x, y, z;
     public float rotation;
     public string text;
+    public int fontSize;
 }
 
 public class SceneryText : MonoBehaviour, SceneryObject
@@ -31,6 +32,23 @@ public class SceneryText : MonoBehaviour, SceneryObject
         }
         return "";
     }
+    void SetFontSize(int size)
+    {
+        Text textComponent = GetComponentInChildren<Text>();
+        if (textComponent != null)
+        {
+            textComponent.fontSize = size;
+        }
+    }
+    int GetFontSize()
+    {
+        Text textComponent = GetComponentInChildren<Text>();
+        if (textComponent != null)
+        {
+            return textComponent.fontSize;
+        }
+        return 0;
+    }
 
     // SceneryObject interface methods
     public SceneryObjectData GetData()
@@ -42,6 +60,7 @@ public class SceneryText : MonoBehaviour, SceneryObject
         sceneryTextData.z = transform.position.z;
         sceneryTextData.rotation = transform.rotation.eulerAngles.z;
         sceneryTextData.text = GetText();
+        sceneryTextData.fontSize = GetFontSize();
         return sceneryTextData;
     }
     public void SetData(SceneryObjectData sceneryObjectData)
@@ -51,5 +70,6 @@ public class SceneryText : MonoBehaviour, SceneryObject
         transform.position = new Vector3(sceneryTextData.x, sceneryTextData.y, sceneryTextData.z);
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, sceneryTextData.rotation);
         SetText(sceneryTextData.text);
+        SetFontSize(sceneryTextData.fontSize);
     }
 }
