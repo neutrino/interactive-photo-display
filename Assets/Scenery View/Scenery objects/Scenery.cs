@@ -7,6 +7,7 @@ using Kinect = Windows.Kinect;
 public class SceneryData : SceneryObjectData
 {
     public SceneryImageData[] images;
+    public SceneryTextData[] texts;
 }
 
 
@@ -15,6 +16,7 @@ public class Scenery : MonoBehaviour, SceneryObject
 {
 
     public GameObject sceneryImagePrefab;
+    public GameObject sceneryTextPrefab;
 
     [Space]
     public Vector3 movementInput = Vector3.zero;
@@ -119,6 +121,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         string json = System.IO.File.ReadAllText(sourcePath);
         SetData(JsonUtility.FromJson<SceneryData>(json));
     }
+
     // Return all scenery objects in children excluding this scenery itself
     public SceneryObject[] GetChildSceneryObjects()
     {
@@ -148,6 +151,14 @@ public class Scenery : MonoBehaviour, SceneryObject
         {
             sceneryData.images[i++] = (SceneryImageData)sceneryImage.GetData();
         }
+        
+        SceneryText[] sceneryTexts = GetComponentsInChildren<SceneryText>();
+        sceneryData.texts = new SceneryTextData[sceneryTexts.Length];
+        i = 0;
+        foreach (SceneryText sceneryText in sceneryTexts)
+        {
+            sceneryData.texts[i++] = (SceneryTextData)sceneryText.GetData();
+        }
 
         return sceneryData;
     }
@@ -161,25 +172,23 @@ public class Scenery : MonoBehaviour, SceneryObject
             DestroyImmediate(((MonoBehaviour)sceneryObject).gameObject);
         }
 
-        // Create new scenery images according to existing data
+        // Create new scenery images from data
         foreach (SceneryImageData sceneryImageData in sceneryData.images)
         {
-            Vector3 pos = new Vector3(sceneryImageData.x, sceneryImageData.y, sceneryImageData.z);
-            Quaternion rot = Quaternion.Euler(0, 0, sceneryImageData.rotation);
             SceneryImage sceneryImage = ((GameObject)Instantiate(sceneryImagePrefab, transform)).GetComponent<SceneryImage>();
-            if (sceneryImageData != null)
+            if (sceneryImage != null)
             {
                 sceneryImage.SetData(sceneryImageData);
             }
         }
+        // Create new text elements from data
+        foreach (SceneryTextData sceneryTextData in sceneryData.texts)
+        {
+            SceneryText sceneryText = ((GameObject)Instantiate(sceneryTextPrefab, transform)).GetComponent<SceneryText>();
+            if (sceneryText != null)
+            {
+                sceneryText.SetData(sceneryTextData);
+            }
+        }
     }
 }
-
-
-
-
-
-
-
-
-
