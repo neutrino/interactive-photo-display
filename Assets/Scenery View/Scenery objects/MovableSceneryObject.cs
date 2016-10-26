@@ -5,8 +5,8 @@ public class MovableSceneryObject : MonoBehaviour
 {
 
     // Starting transform values used for relative transforming after initialization.
-    Vector3 startingPosition;
-    Vector3 startingScale;
+    private Vector3 startingPosition;
+    private Vector3 startingScale;
 
     void Start()
     {
