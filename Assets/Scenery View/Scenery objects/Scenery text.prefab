@@ -41,6 +41,7 @@ GameObject:
   - 4: {fileID: 4000013316187302}
   - 114: {fileID: 114000011986562126}
   - 114: {fileID: 114000011908191210}
+  - 114: {fileID: 114000010564028058}
   m_Layer: 0
   m_Name: Scenery text
   m_TagString: Untagged
@@ -89,7 +90,7 @@ MonoBehaviour:
   m_Script: {fileID: 708705254, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: e17fcb99f148e4e478507ef8f25d0fcd, type: 2}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
@@ -111,6 +112,21 @@ MonoBehaviour:
     m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Text
+--- !u!114 &114000010564028058
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000013240220776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f38fa4fd6780ec408a15fcb9034830f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  horizontalAnimationSpeed: 0
+  horizontalAnimationMagnitude: 0
+  verticalAnimationSpeed: 0
+  verticalAnimationMagnitude: 0
 --- !u!114 &114000011908191210
 MonoBehaviour:
   m_ObjectHideFlags: 1
