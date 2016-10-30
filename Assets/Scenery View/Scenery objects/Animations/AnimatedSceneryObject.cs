@@ -12,24 +12,20 @@ public class AnimatedSceneryObject : MonoBehaviour {
     public float verticalAnimationMagnitude;
 
     Material mat;
-    // Use this for initialization
+
     void Start () {
+        // Get the material from the renderer
         mat = GetComponent<Renderer>().material;
         SetAnimation();
 
     }
-	
-	// Update is called once per frame
-	void Update () {
-
-        
-	}
 
     public void SetAnimation()
     {
         if (mat == null)
             return;
 
+        // Set shader animation values for the material
         mat.SetFloat("_AnimationXSpeed", horizontalAnimationSpeed);
         mat.SetFloat("_AnimationYSpeed", verticalAnimationSpeed);
 
