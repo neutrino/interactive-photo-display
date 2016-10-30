@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class AnimatedSceneryObject : MonoBehaviour {
@@ -11,26 +12,54 @@ public class AnimatedSceneryObject : MonoBehaviour {
     public float verticalAnimationSpeed;
     public float verticalAnimationMagnitude;
 
-    Material mat;
+    Renderer[] renderers;
+    Text[] textElements;
 
     void Start () {
-        // Get the material from the renderer
-        mat = GetComponent<Renderer>().material;
+        // Get renderers and text elements
+        renderers = GetComponentsInChildren<Renderer>();
+        textElements = GetComponentsInChildren<Text>();
         SetAnimation();
 
     }
 
     public void SetAnimation()
     {
-        if (mat == null)
-            return;
+        if (renderers != null)
+        {
+            foreach (Renderer rend in renderers)
+            {
+                Material mat = rend.material;
 
-        // Set shader animation values for the material
-        mat.SetFloat("_AnimationXSpeed", horizontalAnimationSpeed);
-        mat.SetFloat("_AnimationYSpeed", verticalAnimationSpeed);
+                if (mat == null)
+                    return;
 
-        mat.SetFloat("_AnimationXMagnitude", horizontalAnimationMagnitude);
-        mat.SetFloat("_AnimationYMagnitude", verticalAnimationMagnitude);
+                // Set shader animation values for the material
+                mat.SetFloat("_AnimationXSpeed", horizontalAnimationSpeed);
+                mat.SetFloat("_AnimationYSpeed", verticalAnimationSpeed);
+
+                mat.SetFloat("_AnimationXMagnitude", horizontalAnimationMagnitude);
+                mat.SetFloat("_AnimationYMagnitude", verticalAnimationMagnitude);
+            }
+        }
+
+        if (textElements != null)
+        {
+            foreach (Text textElement in textElements)
+            {
+                // Create a new material for each text element
+                Material mat = new Material(textElement.material);
+
+                // Set shader animation values for the material
+                mat.SetFloat("_AnimationXSpeed", horizontalAnimationSpeed);
+                mat.SetFloat("_AnimationYSpeed", verticalAnimationSpeed);
+
+                mat.SetFloat("_AnimationXMagnitude", horizontalAnimationMagnitude);
+                mat.SetFloat("_AnimationYMagnitude", verticalAnimationMagnitude);
+
+                textElement.material = mat;
+            }
+        }
     }
 
     public void OnValidate()
