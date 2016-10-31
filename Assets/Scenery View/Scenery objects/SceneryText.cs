@@ -6,8 +6,8 @@ using UnityEngine.UI;
 [System.Serializable]
 public class SceneryTextData : SceneryObjectData
 {
-    public float x, y, z;
-    public float rotation;
+    public MovableSceneryObjectData movableSceneryObjectData;
+    public AnimatedSceneryObjectData animatedSceneryObjectData;
     public string text;
     public int fontSize;
     public float red;
@@ -16,6 +16,8 @@ public class SceneryTextData : SceneryObjectData
     public float alpha;
 }
 
+[RequireComponent(typeof(MovableSceneryObject))]
+[RequireComponent(typeof(AnimatedSceneryObject))]
 public class SceneryText : MonoBehaviour, SceneryObject
 {
 
@@ -25,10 +27,9 @@ public class SceneryText : MonoBehaviour, SceneryObject
         // Generate a SceneryTextData with current state's information
         
         SceneryTextData sceneryTextData = new SceneryTextData();
-        sceneryTextData.x = transform.position.x;
-        sceneryTextData.y = transform.position.y;
-        sceneryTextData.z = transform.position.z;
-        sceneryTextData.rotation = transform.rotation.eulerAngles.z;
+
+        sceneryTextData.movableSceneryObjectData = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
+        sceneryTextData.animatedSceneryObjectData = (AnimatedSceneryObjectData)GetComponent<AnimatedSceneryObject>().GetData();
 
         Text textComponent = GetComponentInChildren<Text>();
         if (textComponent != null)
@@ -47,8 +48,9 @@ public class SceneryText : MonoBehaviour, SceneryObject
     {
         // Modify current state to match the given data's information
         SceneryTextData sceneryTextData = (SceneryTextData)sceneryObjectData;
-        transform.position = new Vector3(sceneryTextData.x, sceneryTextData.y, sceneryTextData.z);
-        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, sceneryTextData.rotation);
+
+        GetComponent<MovableSceneryObject>().SetData(sceneryTextData.movableSceneryObjectData);
+        GetComponent<AnimatedSceneryObject>().SetData(sceneryTextData.animatedSceneryObjectData);
 
         Text textComponent = GetComponentInChildren<Text>();
         if (textComponent != null)

@@ -1,8 +1,19 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System;
 
-public class AnimatedSceneryObject : MonoBehaviour {
+[System.Serializable]
+public class AnimatedSceneryObjectData : SceneryObjectData
+{
+    public float horizontalAnimationSpeed;
+    public float horizontalAnimationMagnitude;
+    public float verticalAnimationSpeed;
+    public float verticalAnimationMagnitude;
+}
+
+public class AnimatedSceneryObject : MonoBehaviour, SceneryObject
+{
 
     [Header("Horizontal Animation")]
     public float horizontalAnimationSpeed;
@@ -15,12 +26,13 @@ public class AnimatedSceneryObject : MonoBehaviour {
     Renderer[] renderers;
     Text[] textElements;
 
-    void Start () {
+    void Start()
+    {
         // Get renderers and text elements
         renderers = GetComponentsInChildren<Renderer>();
         textElements = GetComponentsInChildren<Text>();
-        SetAnimation();
 
+        SetAnimation();
     }
 
     public void SetAnimation()
@@ -64,6 +76,26 @@ public class AnimatedSceneryObject : MonoBehaviour {
 
     public void OnValidate()
     {
+        SetAnimation();
+    }
+
+    // SceneryObject interface methods
+    public SceneryObjectData GetData()
+    {
+        AnimatedSceneryObjectData data = new AnimatedSceneryObjectData();
+        data.horizontalAnimationMagnitude = horizontalAnimationMagnitude;
+        data.horizontalAnimationSpeed = horizontalAnimationSpeed;
+        data.verticalAnimationMagnitude = verticalAnimationMagnitude;
+        data.verticalAnimationSpeed = verticalAnimationSpeed;
+        return data;
+    }
+    public void SetData(SceneryObjectData sceneryObjectData)
+    {
+        AnimatedSceneryObjectData data = (AnimatedSceneryObjectData)sceneryObjectData;
+        horizontalAnimationMagnitude = data.horizontalAnimationMagnitude;
+        horizontalAnimationSpeed = data.horizontalAnimationSpeed;
+        verticalAnimationMagnitude = data.verticalAnimationMagnitude;
+        verticalAnimationSpeed = data.verticalAnimationSpeed;
         SetAnimation();
     }
 }

@@ -7,13 +7,14 @@ using System.IO;
 [System.Serializable]
 public class SceneryImageData : SceneryObjectData
 {
-    public float x, y, z;
-    public float rotation;
+    public MovableSceneryObjectData movableSceneryObjectData;
+    public AnimatedSceneryObjectData animatedSceneryObjectData;
     public string fileName;
 }
 
 
-
+[RequireComponent(typeof(MovableSceneryObject))]
+[RequireComponent(typeof(AnimatedSceneryObject))]
 public class SceneryImage : MonoBehaviour, SceneryObject
 {
     public string fileName;
@@ -92,10 +93,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
     {
         // Generate a SceneryImageData with current state's information
         SceneryImageData sceneryImageData = new SceneryImageData();
-        sceneryImageData.x = transform.position.x;
-        sceneryImageData.y = transform.position.y;
-        sceneryImageData.z = transform.position.z;
-        sceneryImageData.rotation = transform.rotation.eulerAngles.z;
+        sceneryImageData.movableSceneryObjectData = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
+        sceneryImageData.animatedSceneryObjectData = (AnimatedSceneryObjectData)GetComponent<AnimatedSceneryObject>().GetData();
         sceneryImageData.fileName = fileName;
         return sceneryImageData;
     }
@@ -103,8 +102,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
     {
         // Modify current state to match the given data's information
         SceneryImageData sceneryImageData = (SceneryImageData)sceneryObjectData;
-        transform.position = new Vector3(sceneryImageData.x, sceneryImageData.y, sceneryImageData.z);
-        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, sceneryImageData.rotation);
+        GetComponent<MovableSceneryObject>().SetData(sceneryImageData.movableSceneryObjectData);
+        GetComponent<AnimatedSceneryObject>().SetData(sceneryImageData.animatedSceneryObjectData);
         fileName = sceneryImageData.fileName;
         LoadImage();
     }
