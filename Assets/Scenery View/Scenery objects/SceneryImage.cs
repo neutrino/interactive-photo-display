@@ -10,6 +10,8 @@ public class SceneryImageData : SceneryObjectData
     public MovableSceneryObjectData movableSceneryObjectData;
     public AnimatedSceneryObjectData animatedSceneryObjectData;
     public string fileName;
+    public bool restrictHorizontalMovement;
+    public bool restrictVerticalMovement;
 }
 
 
@@ -18,7 +20,9 @@ public class SceneryImageData : SceneryObjectData
 public class SceneryImage : MonoBehaviour, SceneryObject
 {
     public string fileName;
-    
+    public bool restrictHorizontalMovement;
+    public bool restrictVerticalMovement;
+
     void OnDestroy()
     {
         UnloadImage();
@@ -86,6 +90,59 @@ public class SceneryImage : MonoBehaviour, SceneryObject
             }
         }
         return "";
+    }
+
+    public Vector3[] CornersInWorldSpace()
+    {
+        Vector3[] corners = new Vector3[4];
+        int i = 0;
+
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        Sprite sprite = spriteRenderer.sprite;
+        Vector2 leftTop = new Vector2(-sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
+        corners[i++] = transform.TransformPoint(leftTop);
+        Vector2 leftBot = new Vector2(-sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
+        corners[i++] = transform.TransformPoint(leftBot);
+        Vector2 rightTop = new Vector2(sprite.texture.width - sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
+        corners[i++] = transform.TransformPoint(rightTop);
+        Vector2 rightBot = new Vector2(sprite.texture.width - sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
+        corners[i++] = transform.TransformPoint(rightBot);
+
+        return corners;
+    }
+    public Rect MinimumRectangle()
+    {
+        Vector3[] corners = CornersInWorldSpace();
+
+        Vector2 center = Vector2.zero;
+        foreach (Vector3 corner in corners)
+        {
+            center += (Vector2)corner;
+        }
+        center /= corners.Length;
+        
+        Rect rect = new Rect(corners[1].x, corners[1].y, corners[2].x - corners[1].x, corners[2].y - corners[1].y);
+        foreach (Vector3 corner in corners)
+        {
+            if (corner.x >= center.x && corner.x < rect.xMax)
+            {
+                rect.xMax = corner.x;
+            }
+            if (corner.x < center.x && corner.x > rect.x)
+            {
+                rect.x = corner.x;
+            }
+            if (corner.y >= center.y && corner.y < rect.yMax)
+            {
+                rect.yMax = corner.y;
+            }
+            if (corner.y < center.y && corner.y > rect.y)
+            {
+                rect.y = corner.y;
+            }
+        }
+
+        return rect;
     }
 
     // SceneryObject interface methods

@@ -38,6 +38,19 @@ public class MovableSceneryObject : MonoBehaviour, SceneryObject
         transform.localScale = newScale;
     }
 
+    public Vector3 GetRelativePosition()
+    {
+        return transform.localPosition - startingPosition;
+    }
+    public Vector3 GetRelativeScale()
+    {
+        Vector3 scale = transform.localScale;
+        scale.x /= startingScale.x;
+        scale.y /= startingScale.y;
+        scale.z /= startingScale.z;
+        return scale;
+    }
+
 
     // SceneryObject interface methods
     public SceneryObjectData GetData()
