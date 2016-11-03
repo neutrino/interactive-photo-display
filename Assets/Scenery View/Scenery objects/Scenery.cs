@@ -45,6 +45,7 @@ public class Scenery : MonoBehaviour, SceneryObject
             Debug.Log("No body tracker assigned!");
         }
 
+        // Load a scenery from the path given as a command line argument
         string[] args = System.Environment.GetCommandLineArgs();
         if (args.Length >= 2)
         {
@@ -52,6 +53,18 @@ public class Scenery : MonoBehaviour, SceneryObject
             if (System.IO.File.Exists(path))
             {
                 LoadScenery(args[1]);
+            }
+        }
+        // Optionally disable kinect input from command line argument
+        if (args.Length >= 3)
+        {
+            if (args[2] == "nokinect")
+            {
+                useKinectInput = false;
+            }
+            else
+            {
+                useKinectInput = true;
             }
         }
     }
@@ -117,9 +130,12 @@ public class Scenery : MonoBehaviour, SceneryObject
     }
     public void LoadScenery(string sourcePath)
     {
-        filePath = sourcePath;
-        string json = System.IO.File.ReadAllText(sourcePath);
-        SetData(JsonUtility.FromJson<SceneryData>(json));
+        if (System.IO.File.Exists(sourcePath))
+        {
+            filePath = sourcePath;
+            string json = System.IO.File.ReadAllText(sourcePath);
+            SetData(JsonUtility.FromJson<SceneryData>(json));
+        }
     }
 
     // Return all scenery objects in children excluding this scenery itself

@@ -1,7 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class MovableSceneryObject : MonoBehaviour
+[System.Serializable]
+public class MovableSceneryObjectData : SceneryObjectData
+{
+    public float x, y, z;
+    public float rotation;
+}
+
+public class MovableSceneryObject : MonoBehaviour, SceneryObject
 {
 
     // Starting transform values used for relative transforming after initialization.
@@ -29,6 +36,24 @@ public class MovableSceneryObject : MonoBehaviour
         newScale.y *= scale.y;
         newScale.z *= scale.z;
         transform.localScale = newScale;
+    }
+
+
+    // SceneryObject interface methods
+    public SceneryObjectData GetData()
+    {
+        MovableSceneryObjectData data = new MovableSceneryObjectData();
+        data.x = transform.position.x;
+        data.y = transform.position.y;
+        data.z = transform.position.z;
+        data.rotation = transform.rotation.eulerAngles.z;
+        return data;
+    }
+    public void SetData(SceneryObjectData sceneryObjectData)
+    {
+        MovableSceneryObjectData data = (MovableSceneryObjectData)sceneryObjectData;
+        transform.position = new Vector3(data.x, data.y, data.z);
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, data.rotation);
     }
 
 }
