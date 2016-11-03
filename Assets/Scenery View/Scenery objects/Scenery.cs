@@ -38,6 +38,8 @@ public class Scenery : MonoBehaviour, SceneryObject
 
     void Start()
     {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
+
         previousMousePosition = Input.mousePosition;
 
         if (bodyTracker == null)
@@ -86,27 +88,122 @@ public class Scenery : MonoBehaviour, SceneryObject
             movementInput += (Input.mousePosition - previousMousePosition) / 200.0f;
         }
 
-        // Move each scenery image to a new position depending on input and their depth.
+
+        Camera camera = Camera.main;
+        float halfHeight = camera.orthographicSize;
+        float halfWidth = halfHeight * Camera.main.aspect;
+        Vector3 cameraPos = camera.transform.position;
+        Rect cameraRectangle = new Rect(cameraPos.x - halfWidth, cameraPos.y - halfHeight, halfWidth * 2, halfHeight * 2);
+
+        float maxRightOverflow = 0;
+        float maxLeftOverflow = 0;
+        float maxUpOverflow = 0;
+        float maxDownOverflow = 0;
+
         foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
         {
-            // The smaller the depth (closer to the camera), the faster movement.
-            float depth = movableSceneryObject.transform.localPosition.z;
-            float depthMultiplier = 1 - Mathf.InverseLerp(minImageDepth, maxImageDepth, depth);
-            
-            // Set the image's new position and scale according to input and depth.
-            Vector3 position = movementInput * depthMultiplier;
-            position.z = 0;
-            movableSceneryObject.SetRelativePosition(position);
+            movableSceneryObject.SetRelativePosition(SceneryObjectRelativePosition(movableSceneryObject.transform.localPosition.z, movementInput));
+            movableSceneryObject.SetRelativeScale(SceneryObjectRelativeScale(movableSceneryObject.transform.localPosition.z, movementInput.z));
+            SceneryImage sceneryImage = movableSceneryObject.GetComponent<SceneryImage>();
+            if (sceneryImage != null)
+            {
+                Rect minimumRectangle = sceneryImage.MinimumRectangle();
 
-            Vector3 scale = Vector3.one * (1 + depthMultiplier * movementInput.z);
-            movableSceneryObject.SetRelativeScale(scale);
-            
+                float depth = movableSceneryObject.transform.position.z;
+                Vector3 relativePosition = movableSceneryObject.GetRelativePosition();
+
+                if (sceneryImage.restrictHorizontalMovement)
+                {
+                    float rightOverflow = InverseSceneryObjectRelativePosition(depth, Vector3.right * (cameraRectangle.xMax - minimumRectangle.xMax)).x;
+                    if (rightOverflow > maxRightOverflow)
+                    {
+                        maxRightOverflow = rightOverflow;
+                    }
+                    float leftOverflow = InverseSceneryObjectRelativePosition(depth, Vector3.left * (cameraRectangle.x - minimumRectangle.x)).x;
+                    if (leftOverflow > maxLeftOverflow)
+                    {
+                        maxLeftOverflow = leftOverflow;
+                    }
+                }
+                if (sceneryImage.restrictVerticalMovement)
+                {
+                    float upOverflow = InverseSceneryObjectRelativePosition(depth, Vector3.up * (cameraRectangle.yMax - minimumRectangle.yMax)).y;
+                    if (upOverflow > maxUpOverflow)
+                    {
+                        maxUpOverflow = upOverflow;
+                    }
+                    float downOverflow = InverseSceneryObjectRelativePosition(depth, Vector3.down * (cameraRectangle.y - minimumRectangle.y)).y;
+                    if (downOverflow > maxDownOverflow)
+                    {
+                        maxDownOverflow = downOverflow;
+                    }
+                }
+            }
         }
+        
+        Vector3 fixedMovementInput = movementInput;
+        fixedMovementInput -= Vector3.left * maxRightOverflow;
+        fixedMovementInput -= Vector3.right * maxLeftOverflow;
+        fixedMovementInput -= Vector3.down * maxUpOverflow;
+        fixedMovementInput -= Vector3.up * maxDownOverflow;
+        print("Right: " + maxRightOverflow + ", Left: " + maxLeftOverflow + ", Up: " + maxUpOverflow + ", Down: " + maxDownOverflow);
+        if (!Vector3.Equals(movementInput, fixedMovementInput))
+        {
+            foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
+            {
+                movableSceneryObject.SetRelativePosition(SceneryObjectRelativePosition(movableSceneryObject.transform.position.z, fixedMovementInput));
+            }
+        }
+        movementInput = fixedMovementInput;
 
         previousMousePosition = Input.mousePosition;
     }
 
+    // Returns a number that is used to multiply transformation of movable scenery objects at the given depth
+    float DepthMultiplier(float depth)
+    {
+        return 1 - Mathf.InverseLerp(minImageDepth, maxImageDepth, depth);
+    }
+
+    // Returns a new relative position for a movable scenery object according to given depth and input
+    Vector3 SceneryObjectRelativePosition(float depth, Vector2 input)
+    {
+        Vector3 position = input * DepthMultiplier(depth);
+        return position;
+    }
+    // Returns a new relative scale for a movable scenery object according to given depth and input
+    Vector3 SceneryObjectRelativeScale(float depth, float input)
+    {
+        Vector3 scale = Vector3.one * (1 + DepthMultiplier(depth) * input);
+        return scale;
+    }
+    Vector2 InverseSceneryObjectRelativePosition(float depth, Vector3 position)
+    {
+        float depthMultiplier = DepthMultiplier(depth);
+        if (depthMultiplier != 0)
+        {
+            Vector2 input = position / depthMultiplier;
+            return input;
+        }
+        return Vector2.zero;
+    }
+    float InverseSceneryObjectRelativeScale(float depth, Vector3 scale)
+    {
+        float depthMultiplier = DepthMultiplier(depth);
+        if (depthMultiplier != 0)
+        {
+            float input = (scale.z - 1) / depthMultiplier;
+            return input;
+        }
+        return 0;
+    }
+
+
     void OnTransformChildrenChanged()
+    {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
+    }
+    void OnValidate()
     {
         movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
     }
@@ -124,7 +221,7 @@ public class Scenery : MonoBehaviour, SceneryObject
             mso.SetRelativePosition(Vector3.zero);
             mso.SetRelativeScale(Vector3.zero);
         }
-        
+
         string json = JsonUtility.ToJson(GetData());
         System.IO.File.WriteAllText(targetPath, json);
     }
@@ -167,7 +264,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         {
             sceneryData.images[i++] = (SceneryImageData)sceneryImage.GetData();
         }
-        
+
         SceneryText[] sceneryTexts = GetComponentsInChildren<SceneryText>();
         sceneryData.texts = new SceneryTextData[sceneryTexts.Length];
         i = 0;
@@ -181,7 +278,7 @@ public class Scenery : MonoBehaviour, SceneryObject
     public void SetData(SceneryObjectData sceneryObjectData)
     {
         SceneryData sceneryData = (SceneryData)sceneryObjectData;
-        
+
         // First destroy any currently contained scenery objects
         foreach (SceneryObject sceneryObject in GetChildSceneryObjects())
         {
@@ -206,5 +303,31 @@ public class Scenery : MonoBehaviour, SceneryObject
                 sceneryText.SetData(sceneryTextData);
             }
         }
+    }
+
+    void OnDrawGizmos()
+    {
+        foreach (var o in movableSceneryObjects)
+        {
+            SceneryImage img = o.GetComponent<SceneryImage>();
+            if (img != null)
+            {
+                Rect rect = img.MinimumRectangle();
+                Gizmos.color = Color.black;
+                Gizmos.DrawSphere(new Vector3(rect.x, rect.y, 0), 0.5f);
+                Gizmos.color = Color.blue;
+                Gizmos.DrawSphere(new Vector3(rect.xMax, rect.yMax, 0), 0.5f);
+            }
+        }
+
+        Camera camera = Camera.main;
+        float halfHeight = camera.orthographicSize;
+        float halfWidth = halfHeight * Camera.main.aspect;
+        Vector3 cameraPos = camera.transform.position;
+        Rect cameraRectangle = new Rect(cameraPos.x - halfWidth, cameraPos.y - halfHeight, halfWidth * 2, halfHeight * 2);
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(new Vector3(cameraRectangle.x, cameraRectangle.y, 0), 0.5f);
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(new Vector3(cameraRectangle.xMax, cameraRectangle.yMax, 0), 0.5f);
     }
 }
