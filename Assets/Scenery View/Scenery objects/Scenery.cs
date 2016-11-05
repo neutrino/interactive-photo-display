@@ -70,6 +70,14 @@ public class Scenery : MonoBehaviour, SceneryObject
             }
         }
     }
+    void OnTransformChildrenChanged()
+    {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
+    }
+    void OnValidate()
+    {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
+    }
 
     void Update()
     {
@@ -85,32 +93,58 @@ public class Scenery : MonoBehaviour, SceneryObject
         // Get mouse input
         else if (Input.GetMouseButton(0))
         {
-            movementInput += (Input.mousePosition - previousMousePosition) / 200.0f;
+            movementInput += (Input.mousePosition - previousMousePosition) / 50.0f;
         }
 
+        // First move and scale the objects ignoring camera restrictions
+        TransformMovableSceneryObjects(movementInput);
+        // According to new objects' positions calculate a new fixed input vector that takes restrictions to account
+        Vector3 fixedMovementInput = RestrictedMovementInput(movementInput);
+        if (!Vector3.Equals(movementInput, fixedMovementInput))
+        {
+            // Move the objects again to their new positions according to fixed input
+            TransformMovableSceneryObjects(fixedMovementInput);
+        }
+        movementInput = fixedMovementInput;
 
-        Camera camera = Camera.main;
+        previousMousePosition = Input.mousePosition;
+    }
+
+    // Move and scale all movable scenery objects according to input
+    void TransformMovableSceneryObjects(Vector3 input)
+    {
+        foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
+        {
+            movableSceneryObject.SetRelativePosition(SceneryObjectRelativePosition(movableSceneryObject.transform.localPosition.z, input));
+            movableSceneryObject.SetRelativeScale(SceneryObjectRelativeScale(movableSceneryObject.transform.localPosition.z, input.z));
+        }
+    }
+
+    // Get the ortographic camera's corners in world space ignoring the z-axis
+    Rect CameraRectangle(Camera camera)
+    {
         float halfHeight = camera.orthographicSize;
         float halfWidth = halfHeight * Camera.main.aspect;
         Vector3 cameraPos = camera.transform.position;
-        Rect cameraRectangle = new Rect(cameraPos.x - halfWidth, cameraPos.y - halfHeight, halfWidth * 2, halfHeight * 2);
+        Rect rect = new Rect(cameraPos.x - halfWidth, cameraPos.y - halfHeight, halfWidth * 2, halfHeight * 2);
+        return rect;
+    }
 
+    // Calculate an input vector that takes camera movement restrictions to account according to object's positions
+    Vector3 RestrictedMovementInput(Vector3 input)
+    {
+        Rect cameraRectangle = CameraRectangle(Camera.main);
         float maxRightOverflow = 0;
         float maxLeftOverflow = 0;
         float maxUpOverflow = 0;
         float maxDownOverflow = 0;
-
         foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
         {
-            movableSceneryObject.SetRelativePosition(SceneryObjectRelativePosition(movableSceneryObject.transform.localPosition.z, movementInput));
-            movableSceneryObject.SetRelativeScale(SceneryObjectRelativeScale(movableSceneryObject.transform.localPosition.z, movementInput.z));
             SceneryImage sceneryImage = movableSceneryObject.GetComponent<SceneryImage>();
             if (sceneryImage != null)
             {
-                Rect minimumRectangle = sceneryImage.MinimumRectangle();
-
+                Rect minimumRectangle = sceneryImage.MinimumUprightRectangle();
                 float depth = movableSceneryObject.transform.position.z;
-                Vector3 relativePosition = movableSceneryObject.GetRelativePosition();
 
                 if (sceneryImage.restrictHorizontalMovement)
                 {
@@ -140,23 +174,14 @@ public class Scenery : MonoBehaviour, SceneryObject
                 }
             }
         }
-        
+
         Vector3 fixedMovementInput = movementInput;
         fixedMovementInput -= Vector3.left * maxRightOverflow;
         fixedMovementInput -= Vector3.right * maxLeftOverflow;
         fixedMovementInput -= Vector3.down * maxUpOverflow;
         fixedMovementInput -= Vector3.up * maxDownOverflow;
-        print("Right: " + maxRightOverflow + ", Left: " + maxLeftOverflow + ", Up: " + maxUpOverflow + ", Down: " + maxDownOverflow);
-        if (!Vector3.Equals(movementInput, fixedMovementInput))
-        {
-            foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
-            {
-                movableSceneryObject.SetRelativePosition(SceneryObjectRelativePosition(movableSceneryObject.transform.position.z, fixedMovementInput));
-            }
-        }
-        movementInput = fixedMovementInput;
 
-        previousMousePosition = Input.mousePosition;
+        return fixedMovementInput;
     }
 
     // Returns a number that is used to multiply transformation of movable scenery objects at the given depth
@@ -198,21 +223,12 @@ public class Scenery : MonoBehaviour, SceneryObject
         return 0;
     }
 
-
-    void OnTransformChildrenChanged()
-    {
-        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
-    }
-    void OnValidate()
-    {
-        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
-    }
-
     public string FilePath()
     {
         return filePath;
     }
 
+    // Save the scenery's info to a json file
     public void SaveScenery(string targetPath)
     {
         // Move movable objects back to their starting positions
@@ -225,6 +241,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         string json = JsonUtility.ToJson(GetData());
         System.IO.File.WriteAllText(targetPath, json);
     }
+    // Load the scenery from a json file
     public void LoadScenery(string sourcePath)
     {
         if (System.IO.File.Exists(sourcePath))
@@ -233,22 +250,6 @@ public class Scenery : MonoBehaviour, SceneryObject
             string json = System.IO.File.ReadAllText(sourcePath);
             SetData(JsonUtility.FromJson<SceneryData>(json));
         }
-    }
-
-    // Return all scenery objects in children excluding this scenery itself
-    public SceneryObject[] GetChildSceneryObjects()
-    {
-        SceneryObject[] allSceneryObjects = GetComponentsInChildren<SceneryObject>();
-        SceneryObject[] exclusiveSceneryObjects = new SceneryObject[allSceneryObjects.Length - 1];
-        int i = 0;
-        foreach (SceneryObject sceneryObject in allSceneryObjects)
-        {
-            if (sceneryObject != this)
-            {
-                exclusiveSceneryObjects[i++] = sceneryObject;
-            }
-        }
-        return exclusiveSceneryObjects;
     }
 
 
@@ -280,9 +281,12 @@ public class Scenery : MonoBehaviour, SceneryObject
         SceneryData sceneryData = (SceneryData)sceneryObjectData;
 
         // First destroy any currently contained scenery objects
-        foreach (SceneryObject sceneryObject in GetChildSceneryObjects())
+        foreach (SceneryObject sceneryObject in GetComponentsInChildren<SceneryObject>())
         {
-            DestroyImmediate(((MonoBehaviour)sceneryObject).gameObject);
+            if (sceneryObject != (SceneryObject)this)
+            {
+                DestroyImmediate(((MonoBehaviour)sceneryObject).gameObject);
+            }
         }
 
         // Create new scenery images from data
@@ -303,31 +307,5 @@ public class Scenery : MonoBehaviour, SceneryObject
                 sceneryText.SetData(sceneryTextData);
             }
         }
-    }
-
-    void OnDrawGizmos()
-    {
-        foreach (var o in movableSceneryObjects)
-        {
-            SceneryImage img = o.GetComponent<SceneryImage>();
-            if (img != null)
-            {
-                Rect rect = img.MinimumRectangle();
-                Gizmos.color = Color.black;
-                Gizmos.DrawSphere(new Vector3(rect.x, rect.y, 0), 0.5f);
-                Gizmos.color = Color.blue;
-                Gizmos.DrawSphere(new Vector3(rect.xMax, rect.yMax, 0), 0.5f);
-            }
-        }
-
-        Camera camera = Camera.main;
-        float halfHeight = camera.orthographicSize;
-        float halfWidth = halfHeight * Camera.main.aspect;
-        Vector3 cameraPos = camera.transform.position;
-        Rect cameraRectangle = new Rect(cameraPos.x - halfWidth, cameraPos.y - halfHeight, halfWidth * 2, halfHeight * 2);
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(new Vector3(cameraRectangle.x, cameraRectangle.y, 0), 0.5f);
-        Gizmos.color = Color.green;
-        Gizmos.DrawSphere(new Vector3(cameraRectangle.xMax, cameraRectangle.yMax, 0), 0.5f);
     }
 }
