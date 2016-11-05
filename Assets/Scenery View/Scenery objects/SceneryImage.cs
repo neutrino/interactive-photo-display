@@ -92,6 +92,7 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         return "";
     }
 
+    // Returns an array (of four length) that contains the corners of the image in world space.
     public Vector3[] CornersInWorldSpace()
     {
         Vector3[] corners = new Vector3[4];
@@ -99,18 +100,20 @@ public class SceneryImage : MonoBehaviour, SceneryObject
 
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
         Sprite sprite = spriteRenderer.sprite;
-        Vector2 leftTop = new Vector2(-sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
+        Vector3 leftTop = new Vector3(-sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
         corners[i++] = transform.TransformPoint(leftTop);
-        Vector2 leftBot = new Vector2(-sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
+        Vector3 leftBot = new Vector3(-sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
         corners[i++] = transform.TransformPoint(leftBot);
-        Vector2 rightTop = new Vector2(sprite.texture.width - sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
+        Vector3 rightTop = new Vector3(sprite.texture.width - sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
         corners[i++] = transform.TransformPoint(rightTop);
-        Vector2 rightBot = new Vector2(sprite.texture.width - sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
+        Vector3 rightBot = new Vector3(sprite.texture.width - sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
         corners[i++] = transform.TransformPoint(rightBot);
 
         return corners;
     }
-    public Rect MinimumRectangle()
+
+    // Generates an upright rectangle that is contained within the image rectangle, rotated or not. Coordinates are in world space.
+    public Rect MinimumUprightRectangle()
     {
         Vector3[] corners = CornersInWorldSpace();
 
@@ -121,7 +124,7 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         }
         center /= corners.Length;
         
-        Rect rect = new Rect(corners[1].x, corners[1].y, corners[2].x - corners[1].x, corners[2].y - corners[1].y);
+        Rect rect = new Rect(float.MinValue, float.MinValue, float.MaxValue, float.MaxValue);
         foreach (Vector3 corner in corners)
         {
             if (corner.x >= center.x && corner.x < rect.xMax)
@@ -153,6 +156,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         sceneryImageData.movableSceneryObjectData = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
         sceneryImageData.animatedSceneryObjectData = (AnimatedSceneryObjectData)GetComponent<AnimatedSceneryObject>().GetData();
         sceneryImageData.fileName = fileName;
+        sceneryImageData.restrictHorizontalMovement = restrictHorizontalMovement;
+        sceneryImageData.restrictVerticalMovement = restrictVerticalMovement;
         return sceneryImageData;
     }
     public void SetData(SceneryObjectData sceneryObjectData)
@@ -162,6 +167,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         GetComponent<MovableSceneryObject>().SetData(sceneryImageData.movableSceneryObjectData);
         GetComponent<AnimatedSceneryObject>().SetData(sceneryImageData.animatedSceneryObjectData);
         fileName = sceneryImageData.fileName;
+        restrictHorizontalMovement = sceneryImageData.restrictHorizontalMovement;
+        restrictVerticalMovement = sceneryImageData.restrictVerticalMovement;
         LoadImage();
     }
 }
