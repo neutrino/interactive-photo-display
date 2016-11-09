@@ -53,7 +53,7 @@ Shader "Animated/Sprite"
 			#if defined(PIXELSNAP_ON)
 			v.vertex = UnityPixelSnap (v.vertex);
 			#endif
-			float _Height = v.vertex.y +_HeightOffset;
+			float _Height = v.vertex.y + _HeightOffset;
 			v.vertex.x += sin(_AnimationXSpeed * _Time) * _AnimationXMagnitude * _Height;
 			v.vertex.y += sin(_AnimationYSpeed * _Time) * _AnimationYMagnitude * _Height;
 			UNITY_INITIALIZE_OUTPUT(Input, o);
