@@ -9,7 +9,6 @@ Shader "Animated/Sprite"
 			_AnimationYSpeed("Animation Vertical Speed", Float) = 0
 			_AnimationXMagnitude("Animation Horizontal Magnitude", Float) = 1
 			_AnimationYMagnitude("Animation Vertical Magnitude", Float) = 1
-			_HeightOffset("Height Offset", Float) = 0
 	}
 
 	SubShader
