@@ -10,6 +10,8 @@ public class SceneryImageData : SceneryObjectData
     public MovableSceneryObjectData movableSceneryObjectData;
     public AnimatedSceneryObjectData animatedSceneryObjectData;
     public string fileName;
+    public bool restrictHorizontalMovement;
+    public bool restrictVerticalMovement;
 }
 
 
@@ -18,7 +20,9 @@ public class SceneryImageData : SceneryObjectData
 public class SceneryImage : MonoBehaviour, SceneryObject
 {
     public string fileName;
-    
+    public bool restrictHorizontalMovement;
+    public bool restrictVerticalMovement;
+
     void OnDestroy()
     {
         UnloadImage();
@@ -88,6 +92,62 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         return "";
     }
 
+    // Returns an array (of four length) that contains the corners of the image in world space.
+    public Vector3[] CornersInWorldSpace()
+    {
+        Vector3[] corners = new Vector3[4];
+        int i = 0;
+
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        Sprite sprite = spriteRenderer.sprite;
+        Vector3 leftTop = new Vector3(-sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
+        corners[i++] = transform.TransformPoint(leftTop);
+        Vector3 leftBot = new Vector3(-sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
+        corners[i++] = transform.TransformPoint(leftBot);
+        Vector3 rightTop = new Vector3(sprite.texture.width - sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
+        corners[i++] = transform.TransformPoint(rightTop);
+        Vector3 rightBot = new Vector3(sprite.texture.width - sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
+        corners[i++] = transform.TransformPoint(rightBot);
+
+        return corners;
+    }
+
+    // Generates an upright rectangle that is contained within the image rectangle, rotated or not. Coordinates are in world space.
+    public Rect MinimumUprightRectangle()
+    {
+        Vector3[] corners = CornersInWorldSpace();
+
+        Vector2 center = Vector2.zero;
+        foreach (Vector3 corner in corners)
+        {
+            center += (Vector2)corner;
+        }
+        center /= corners.Length;
+        
+        Rect rect = new Rect(float.MinValue, float.MinValue, float.MaxValue, float.MaxValue);
+        foreach (Vector3 corner in corners)
+        {
+            if (corner.x >= center.x && corner.x < rect.xMax)
+            {
+                rect.xMax = corner.x;
+            }
+            if (corner.x < center.x && corner.x > rect.x)
+            {
+                rect.x = corner.x;
+            }
+            if (corner.y >= center.y && corner.y < rect.yMax)
+            {
+                rect.yMax = corner.y;
+            }
+            if (corner.y < center.y && corner.y > rect.y)
+            {
+                rect.y = corner.y;
+            }
+        }
+
+        return rect;
+    }
+
     // SceneryObject interface methods
     public SceneryObjectData GetData()
     {
@@ -96,6 +156,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         sceneryImageData.movableSceneryObjectData = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
         sceneryImageData.animatedSceneryObjectData = (AnimatedSceneryObjectData)GetComponent<AnimatedSceneryObject>().GetData();
         sceneryImageData.fileName = fileName;
+        sceneryImageData.restrictHorizontalMovement = restrictHorizontalMovement;
+        sceneryImageData.restrictVerticalMovement = restrictVerticalMovement;
         return sceneryImageData;
     }
     public void SetData(SceneryObjectData sceneryObjectData)
@@ -105,6 +167,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         GetComponent<MovableSceneryObject>().SetData(sceneryImageData.movableSceneryObjectData);
         GetComponent<AnimatedSceneryObject>().SetData(sceneryImageData.animatedSceneryObjectData);
         fileName = sceneryImageData.fileName;
+        restrictHorizontalMovement = sceneryImageData.restrictHorizontalMovement;
+        restrictVerticalMovement = sceneryImageData.restrictVerticalMovement;
         LoadImage();
     }
 }

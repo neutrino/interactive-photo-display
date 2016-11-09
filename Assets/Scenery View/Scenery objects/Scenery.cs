@@ -38,6 +38,8 @@ public class Scenery : MonoBehaviour, SceneryObject
 
     void Start()
     {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
+
         previousMousePosition = Input.mousePosition;
 
         if (bodyTracker == null)
@@ -68,6 +70,14 @@ public class Scenery : MonoBehaviour, SceneryObject
             }
         }
     }
+    void OnTransformChildrenChanged()
+    {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
+    }
+    void OnValidate()
+    {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
+    }
 
     void Update()
     {
@@ -83,32 +93,134 @@ public class Scenery : MonoBehaviour, SceneryObject
         // Get mouse input
         else if (Input.GetMouseButton(0))
         {
-            movementInput += (Input.mousePosition - previousMousePosition) / 200.0f;
+            movementInput += (Input.mousePosition - previousMousePosition) / 50.0f;
         }
 
-        // Move each scenery image to a new position depending on input and their depth.
-        foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
+        // First move and scale the objects ignoring camera restrictions
+        TransformMovableSceneryObjects(movementInput);
+        // According to new objects' positions calculate a new fixed input vector that takes restrictions to account
+        Vector3 fixedMovementInput = RestrictedMovementInput(movementInput);
+        if (!Vector3.Equals(movementInput, fixedMovementInput))
         {
-            // The smaller the depth (closer to the camera), the faster movement.
-            float depth = movableSceneryObject.transform.localPosition.z;
-            float depthMultiplier = 1 - Mathf.InverseLerp(minImageDepth, maxImageDepth, depth);
-            
-            // Set the image's new position and scale according to input and depth.
-            Vector3 position = movementInput * depthMultiplier;
-            position.z = 0;
-            movableSceneryObject.SetRelativePosition(position);
-
-            Vector3 scale = Vector3.one * (1 + depthMultiplier * movementInput.z);
-            movableSceneryObject.SetRelativeScale(scale);
-            
+            // Move the objects again to their new positions according to fixed input
+            TransformMovableSceneryObjects(fixedMovementInput);
         }
+        movementInput = fixedMovementInput;
 
         previousMousePosition = Input.mousePosition;
     }
 
-    void OnTransformChildrenChanged()
+    // Move and scale all movable scenery objects according to input
+    void TransformMovableSceneryObjects(Vector3 input)
     {
-        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
+        foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
+        {
+            movableSceneryObject.SetRelativePosition(SceneryObjectRelativePosition(movableSceneryObject.transform.localPosition.z, input));
+            movableSceneryObject.SetRelativeScale(SceneryObjectRelativeScale(movableSceneryObject.transform.localPosition.z, input.z));
+        }
+    }
+
+    // Get the ortographic camera's corners in world space ignoring the z-axis
+    Rect CameraRectangle(Camera camera)
+    {
+        float halfHeight = camera.orthographicSize;
+        float halfWidth = halfHeight * Camera.main.aspect;
+        Vector3 cameraPos = camera.transform.position;
+        Rect rect = new Rect(cameraPos.x - halfWidth, cameraPos.y - halfHeight, halfWidth * 2, halfHeight * 2);
+        return rect;
+    }
+
+    // Calculate an input vector that takes camera movement restrictions to account according to object's positions
+    Vector3 RestrictedMovementInput(Vector3 input)
+    {
+        Rect cameraRectangle = CameraRectangle(Camera.main);
+        float maxRightOverflow = 0;
+        float maxLeftOverflow = 0;
+        float maxUpOverflow = 0;
+        float maxDownOverflow = 0;
+        foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
+        {
+            SceneryImage sceneryImage = movableSceneryObject.GetComponent<SceneryImage>();
+            if (sceneryImage != null)
+            {
+                Rect minimumRectangle = sceneryImage.MinimumUprightRectangle();
+                float depth = movableSceneryObject.transform.position.z;
+
+                if (sceneryImage.restrictHorizontalMovement)
+                {
+                    float rightOverflow = InverseSceneryObjectRelativePosition(depth, Vector3.right * (cameraRectangle.xMax - minimumRectangle.xMax)).x;
+                    if (rightOverflow > maxRightOverflow)
+                    {
+                        maxRightOverflow = rightOverflow;
+                    }
+                    float leftOverflow = InverseSceneryObjectRelativePosition(depth, Vector3.left * (cameraRectangle.x - minimumRectangle.x)).x;
+                    if (leftOverflow > maxLeftOverflow)
+                    {
+                        maxLeftOverflow = leftOverflow;
+                    }
+                }
+                if (sceneryImage.restrictVerticalMovement)
+                {
+                    float upOverflow = InverseSceneryObjectRelativePosition(depth, Vector3.up * (cameraRectangle.yMax - minimumRectangle.yMax)).y;
+                    if (upOverflow > maxUpOverflow)
+                    {
+                        maxUpOverflow = upOverflow;
+                    }
+                    float downOverflow = InverseSceneryObjectRelativePosition(depth, Vector3.down * (cameraRectangle.y - minimumRectangle.y)).y;
+                    if (downOverflow > maxDownOverflow)
+                    {
+                        maxDownOverflow = downOverflow;
+                    }
+                }
+            }
+        }
+
+        Vector3 fixedMovementInput = movementInput;
+        fixedMovementInput -= Vector3.left * maxRightOverflow;
+        fixedMovementInput -= Vector3.right * maxLeftOverflow;
+        fixedMovementInput -= Vector3.down * maxUpOverflow;
+        fixedMovementInput -= Vector3.up * maxDownOverflow;
+
+        return fixedMovementInput;
+    }
+
+    // Returns a number that is used to multiply transformation of movable scenery objects at the given depth
+    float DepthMultiplier(float depth)
+    {
+        return 1 - Mathf.InverseLerp(minImageDepth, maxImageDepth, depth);
+    }
+
+    // Returns a new relative position for a movable scenery object according to given depth and input
+    Vector3 SceneryObjectRelativePosition(float depth, Vector2 input)
+    {
+        Vector3 position = input * DepthMultiplier(depth);
+        return position;
+    }
+    // Returns a new relative scale for a movable scenery object according to given depth and input
+    Vector3 SceneryObjectRelativeScale(float depth, float input)
+    {
+        Vector3 scale = Vector3.one * (1 + DepthMultiplier(depth) * input);
+        return scale;
+    }
+    Vector2 InverseSceneryObjectRelativePosition(float depth, Vector3 position)
+    {
+        float depthMultiplier = DepthMultiplier(depth);
+        if (depthMultiplier != 0)
+        {
+            Vector2 input = position / depthMultiplier;
+            return input;
+        }
+        return Vector2.zero;
+    }
+    float InverseSceneryObjectRelativeScale(float depth, Vector3 scale)
+    {
+        float depthMultiplier = DepthMultiplier(depth);
+        if (depthMultiplier != 0)
+        {
+            float input = (scale.z - 1) / depthMultiplier;
+            return input;
+        }
+        return 0;
     }
 
     public string FilePath()
@@ -116,6 +228,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         return filePath;
     }
 
+    // Save the scenery's info to a json file
     public void SaveScenery(string targetPath)
     {
         // Move movable objects back to their starting positions
@@ -124,10 +237,11 @@ public class Scenery : MonoBehaviour, SceneryObject
             mso.SetRelativePosition(Vector3.zero);
             mso.SetRelativeScale(Vector3.zero);
         }
-        
+
         string json = JsonUtility.ToJson(GetData());
         System.IO.File.WriteAllText(targetPath, json);
     }
+    // Load the scenery from a json file
     public void LoadScenery(string sourcePath)
     {
         if (System.IO.File.Exists(sourcePath))
@@ -136,22 +250,6 @@ public class Scenery : MonoBehaviour, SceneryObject
             string json = System.IO.File.ReadAllText(sourcePath);
             SetData(JsonUtility.FromJson<SceneryData>(json));
         }
-    }
-
-    // Return all scenery objects in children excluding this scenery itself
-    public SceneryObject[] GetChildSceneryObjects()
-    {
-        SceneryObject[] allSceneryObjects = GetComponentsInChildren<SceneryObject>();
-        SceneryObject[] exclusiveSceneryObjects = new SceneryObject[allSceneryObjects.Length - 1];
-        int i = 0;
-        foreach (SceneryObject sceneryObject in allSceneryObjects)
-        {
-            if (sceneryObject != this)
-            {
-                exclusiveSceneryObjects[i++] = sceneryObject;
-            }
-        }
-        return exclusiveSceneryObjects;
     }
 
 
@@ -167,7 +265,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         {
             sceneryData.images[i++] = (SceneryImageData)sceneryImage.GetData();
         }
-        
+
         SceneryText[] sceneryTexts = GetComponentsInChildren<SceneryText>();
         sceneryData.texts = new SceneryTextData[sceneryTexts.Length];
         i = 0;
@@ -181,11 +279,14 @@ public class Scenery : MonoBehaviour, SceneryObject
     public void SetData(SceneryObjectData sceneryObjectData)
     {
         SceneryData sceneryData = (SceneryData)sceneryObjectData;
-        
+
         // First destroy any currently contained scenery objects
-        foreach (SceneryObject sceneryObject in GetChildSceneryObjects())
+        foreach (SceneryObject sceneryObject in GetComponentsInChildren<SceneryObject>())
         {
-            DestroyImmediate(((MonoBehaviour)sceneryObject).gameObject);
+            if (sceneryObject != (SceneryObject)this)
+            {
+                DestroyImmediate(((MonoBehaviour)sceneryObject).gameObject);
+            }
         }
 
         // Create new scenery images from data
