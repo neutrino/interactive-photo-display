@@ -231,6 +231,7 @@ public class Scenery : MonoBehaviour, SceneryObject
     // Save the scenery's info to a json file
     public void SaveScenery(string targetPath)
     {
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
         // Move movable objects back to their starting positions
         foreach (MovableSceneryObject mso in movableSceneryObjects)
         {

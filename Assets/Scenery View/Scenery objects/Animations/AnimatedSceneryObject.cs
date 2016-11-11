@@ -52,6 +52,12 @@ public class AnimatedSceneryObject : MonoBehaviour, SceneryObject
 
                 mat.SetFloat("_AnimationXMagnitude", horizontalAnimationMagnitude);
                 mat.SetFloat("_AnimationYMagnitude", verticalAnimationMagnitude);
+
+                SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+                if (spriteRenderer != null)
+                {
+                    mat.SetFloat("_HeightOffset", spriteRenderer.sprite.texture.height / spriteRenderer.sprite.pixelsPerUnit / 2.0f);
+                }
             }
         }
 
