@@ -95,6 +95,8 @@ public class Scenery : MonoBehaviour, SceneryObject
         {
             movementInput += (Input.mousePosition - previousMousePosition) / 50.0f;
         }
+        movementInput.z = Mathf.Max(0, movementInput.z);
+
 
         // First move and scale the objects ignoring camera restrictions
         TransformMovableSceneryObjects(movementInput);
@@ -105,18 +107,27 @@ public class Scenery : MonoBehaviour, SceneryObject
             // Move the objects again to their new positions according to fixed input
             TransformMovableSceneryObjects(fixedMovementInput);
         }
-        movementInput = fixedMovementInput;
+
+        if (!useKinectInput)
+        {
+            movementInput = fixedMovementInput;
+        }
+        
 
         previousMousePosition = Input.mousePosition;
     }
 
-    // Move and scale all movable scenery objects according to input
+    // Move and scale all movable scenery objects according to input. Doesn't scale all the way to 0.
     void TransformMovableSceneryObjects(Vector3 input)
     {
         foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
         {
             movableSceneryObject.SetRelativePosition(SceneryObjectRelativePosition(movableSceneryObject.transform.localPosition.z, input));
-            movableSceneryObject.SetRelativeScale(SceneryObjectRelativeScale(movableSceneryObject.transform.localPosition.z, input.z));
+            Vector3 scale = SceneryObjectRelativeScale(movableSceneryObject.transform.localPosition.z, input.z);
+            scale.x = Mathf.Max(0.0001f, scale.x);
+            scale.y = Mathf.Max(0.0001f, scale.y);
+            scale.z = Mathf.Max(0.0001f, scale.z);
+            movableSceneryObject.SetRelativeScale(scale);
         }
     }
 
@@ -176,10 +187,24 @@ public class Scenery : MonoBehaviour, SceneryObject
         }
 
         Vector3 fixedMovementInput = movementInput;
-        fixedMovementInput -= Vector3.left * maxRightOverflow;
-        fixedMovementInput -= Vector3.right * maxLeftOverflow;
-        fixedMovementInput -= Vector3.down * maxUpOverflow;
-        fixedMovementInput -= Vector3.up * maxDownOverflow;
+        if (!(maxRightOverflow != 0 && maxLeftOverflow != 0))
+        {
+            fixedMovementInput -= Vector3.left * maxRightOverflow;
+            fixedMovementInput -= Vector3.right * maxLeftOverflow;
+        }
+        else
+        {
+            fixedMovementInput.x = 0;
+        }
+        if (!(maxUpOverflow != 0 && maxDownOverflow != 0))
+        {
+            fixedMovementInput -= Vector3.down * maxUpOverflow;
+            fixedMovementInput -= Vector3.up * maxDownOverflow;
+        }
+        else
+        {
+            fixedMovementInput.y = 0;
+        }
 
         return fixedMovementInput;
     }
