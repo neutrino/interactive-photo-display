@@ -23,50 +23,24 @@ public class Scenery : MonoBehaviour, SceneryObject
     public float minImageDepth = -1;
     public float maxImageDepth = 0;
 
-    [Header("Kinect input")]
-    public bool useKinectInput = false;
-    public Vector3 inputMultiplier = Vector3.one;
-    public Vector3 inputOffset = Vector3.zero;
-    public float inputSmoothing = 10;
     public BodyTracker bodyTracker;
-
 
     private MovableSceneryObject[] movableSceneryObjects = new MovableSceneryObject[0];
     private string filePath;
+    private Configurations configurations;
 
     private Vector3 previousMousePosition;
 
     void Start()
     {
         movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
-
         previousMousePosition = Input.mousePosition;
-
         if (bodyTracker == null)
         {
-            Debug.Log("No body tracker assigned!");
-        }
-
-        // Load a scenery from the path given as a command line argument
-        string[] args = System.Environment.GetCommandLineArgs();
-        if (args.Length >= 2)
-        {
-            string path = args[1];
-            if (System.IO.File.Exists(path))
+            bodyTracker = FindObjectOfType<BodyTracker>();
+            if (bodyTracker == null)
             {
-                LoadScenery(args[1]);
-            }
-        }
-        // Optionally disable kinect input from command line argument
-        if (args.Length >= 3)
-        {
-            if (args[2] == "nokinect")
-            {
-                useKinectInput = false;
-            }
-            else
-            {
-                useKinectInput = true;
+                Debug.Log("Can't find a BodyTracker!");
             }
         }
     }
@@ -81,44 +55,45 @@ public class Scenery : MonoBehaviour, SceneryObject
 
     void Update()
     {
-
-        // Get Kinect input
-        if (useKinectInput && bodyTracker != null)
+        if (configurations != null)
         {
-            Vector3 position = inputOffset;
-            position += BodyTracker.BodyPosition(bodyTracker.NearestBody());
-            position = Vector3.Scale(position, inputMultiplier);
-            movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * inputSmoothing);
-        }
-        // Get mouse input
-        else if (Input.GetMouseButton(0))
-        {
-            movementInput += (Input.mousePosition - previousMousePosition) / 50.0f;
-        }
-        movementInput.z = Mathf.Max(0, movementInput.z);
+            // Get Kinect input
+            if (configurations.useKinectInput && bodyTracker != null)
+            {
+                Vector3 position = configurations.KinectOffset();
+                position += BodyTracker.BodyPosition(bodyTracker.NearestBody());
+                position = Vector3.Scale(position, configurations.KinectMultiplier());
+                movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * configurations.kinectSmoothing);
+            }
+            // Get mouse input
+            else if (Input.GetMouseButton(0))
+            {
+                movementInput += (Input.mousePosition - previousMousePosition) / 50.0f;
+            }
+            movementInput.z = Mathf.Max(0, movementInput.z);
 
 
-        // First move and scale the objects ignoring camera restrictions
-        TransformMovableSceneryObjects(movementInput);
-        // According to new objects' positions calculate a new fixed input vector that takes restrictions to account
-        Vector3 fixedMovementInput = RestrictedMovementInput(movementInput);
-        if (!Vector3.Equals(movementInput, fixedMovementInput))
-        {
-            // Move the objects again to their new positions according to fixed input
-            TransformMovableSceneryObjects(fixedMovementInput);
-        }
+            // First move and scale the objects ignoring camera restrictions
+            TransformMovableSceneryObjects(movementInput);
+            // According to new objects' positions calculate a new fixed input vector that takes restrictions to account
+            Vector3 fixedMovementInput = RestrictedMovementInput(movementInput);
+            if (!Vector3.Equals(movementInput, fixedMovementInput))
+            {
+                // Move the objects again to their new positions according to fixed input
+                TransformMovableSceneryObjects(fixedMovementInput);
+            }
 
-        if (!useKinectInput)
-        {
-            movementInput = fixedMovementInput;
-        }
-        
+            if (!configurations.useKinectInput)
+            {
+                movementInput = fixedMovementInput;
+            }
 
-        previousMousePosition = Input.mousePosition;
+            previousMousePosition = Input.mousePosition;
+        }
     }
 
-    // Move and scale all movable scenery objects according to input. Doesn't scale all the way to 0.
-    void TransformMovableSceneryObjects(Vector3 input)
+    // Move and scale all movable scenery objects according to input. Don't scale all the way to 0.
+    private void TransformMovableSceneryObjects(Vector3 input)
     {
         foreach (MovableSceneryObject movableSceneryObject in movableSceneryObjects)
         {
@@ -132,7 +107,7 @@ public class Scenery : MonoBehaviour, SceneryObject
     }
 
     // Get the ortographic camera's corners in world space ignoring the z-axis
-    Rect CameraRectangle(Camera camera)
+    private Rect CameraRectangle(Camera camera)
     {
         float halfHeight = camera.orthographicSize;
         float halfWidth = halfHeight * Camera.main.aspect;
@@ -142,7 +117,7 @@ public class Scenery : MonoBehaviour, SceneryObject
     }
 
     // Calculate an input vector that takes camera movement restrictions to account according to object's positions
-    Vector3 RestrictedMovementInput(Vector3 input)
+    private Vector3 RestrictedMovementInput(Vector3 input)
     {
         Rect cameraRectangle = CameraRectangle(Camera.main);
         float maxRightOverflow = 0;
@@ -210,24 +185,24 @@ public class Scenery : MonoBehaviour, SceneryObject
     }
 
     // Returns a number that is used to multiply transformation of movable scenery objects at the given depth
-    float DepthMultiplier(float depth)
+    private float DepthMultiplier(float depth)
     {
         return 1 - Mathf.InverseLerp(minImageDepth, maxImageDepth, depth);
     }
 
     // Returns a new relative position for a movable scenery object according to given depth and input
-    Vector3 SceneryObjectRelativePosition(float depth, Vector2 input)
+    private Vector3 SceneryObjectRelativePosition(float depth, Vector2 input)
     {
         Vector3 position = input * DepthMultiplier(depth);
         return position;
     }
     // Returns a new relative scale for a movable scenery object according to given depth and input
-    Vector3 SceneryObjectRelativeScale(float depth, float input)
+    private Vector3 SceneryObjectRelativeScale(float depth, float input)
     {
         Vector3 scale = Vector3.one * (1 + DepthMultiplier(depth) * input);
         return scale;
     }
-    Vector2 InverseSceneryObjectRelativePosition(float depth, Vector3 position)
+    private Vector2 InverseSceneryObjectRelativePosition(float depth, Vector3 position)
     {
         float depthMultiplier = DepthMultiplier(depth);
         if (depthMultiplier != 0)
@@ -237,7 +212,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         }
         return Vector2.zero;
     }
-    float InverseSceneryObjectRelativeScale(float depth, Vector3 scale)
+    private float InverseSceneryObjectRelativeScale(float depth, Vector3 scale)
     {
         float depthMultiplier = DepthMultiplier(depth);
         if (depthMultiplier != 0)
@@ -248,6 +223,10 @@ public class Scenery : MonoBehaviour, SceneryObject
         return 0;
     }
 
+    public void SetConfigurations(Configurations configurations)
+    {
+        this.configurations = configurations;
+    }
     public string FilePath()
     {
         return filePath;
@@ -276,6 +255,7 @@ public class Scenery : MonoBehaviour, SceneryObject
             string json = System.IO.File.ReadAllText(sourcePath);
             SetData(JsonUtility.FromJson<SceneryData>(json));
         }
+        movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
     }
 
 
