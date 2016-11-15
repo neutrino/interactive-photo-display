@@ -38,36 +38,13 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         loadingCoroutine = LoadImageInBackground();
 
         StartCoroutine(loadingCoroutine);
-
-        /*string absolutePath = GetAbsolutePath(fileName);
-
-        if (File.Exists(absolutePath))
-        {
-            // First unload any previously loaded image.
-            UnloadImage();
-
-            // Read the bytes from the file to a new texture.
-            byte[] imageData = File.ReadAllBytes(absolutePath);
-            Texture2D texture = new Texture2D(2, 2);
-            if (!texture.LoadImage(imageData))
-            {
-                Debug.Log("Cannot load image from '" + absolutePath + "'.");
-            }
-
-            // Create a sprite from the new texture.
-            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-            GetComponent<SpriteRenderer>().sprite = sprite;
-        }
-        else
-        {
-            Debug.Log("File at '" + absolutePath + "' doesn't exist.");
-        }*/
     }
 
     IEnumerator LoadImageInBackground()
     {
         string absolutePath = fileName;
-        // Use local path if the file name doesn't have supported 
+        
+        // Get the path
         if (!fileName.StartsWith("http://") && !fileName.StartsWith("https://"))
         {
             absolutePath = "file:///" + GetAbsolutePath(fileName);
@@ -92,24 +69,27 @@ public class SceneryImage : MonoBehaviour, SceneryObject
             {
                 yield return movieTexture;
             }
-            Debug.Log("Got movie texture");
-            // Give the movie to the renderer material
+
+            // Create new sprite with the right dimensions
             Sprite sprite = Sprite.Create(new Texture2D(movieTexture.width, movieTexture.height), new Rect(0, 0, movieTexture.width, movieTexture.height), new Vector2(0.5f, 0.5f));
+
+            // Create new MaterialPropertyBlock and assign the movieTexture to it
             MaterialPropertyBlock block = new MaterialPropertyBlock();
             block.SetTexture("_MainTex", movieTexture);
 
             SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();           
             spriteRenderer.sprite = sprite;
 
+            // Give the movie to the renderer material
             spriteRenderer.SetPropertyBlock(block);
 
-            // Set to loop and play
+            // Set the movie to loop and play
             movieTexture.loop = true;
             movieTexture.Play();
-            Debug.Log("Playing");
         }
         else
         {
+            // Load the image to a new texture
             Texture2D texture = new Texture2D(2, 2);
             imageWWW.LoadImageIntoTexture(texture);
 
