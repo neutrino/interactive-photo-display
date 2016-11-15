@@ -23,6 +23,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
     public bool restrictHorizontalMovement;
     public bool restrictVerticalMovement;
 
+    private IEnumerator loadingCoroutine;
+
     void OnDestroy()
     {
         UnloadImage();
@@ -31,7 +33,13 @@ public class SceneryImage : MonoBehaviour, SceneryObject
     // Load an image from any local image file to a texture, create a sprite from it and assign that to this scenery image.
     public void LoadImage()
     {
-        string absolutePath = GetAbsolutePath(fileName);
+        UnloadImage();
+
+        loadingCoroutine = LoadImageInBackground();
+
+        StartCoroutine(loadingCoroutine);
+
+        /*string absolutePath = GetAbsolutePath(fileName);
 
         if (File.Exists(absolutePath))
         {
@@ -53,6 +61,61 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         else
         {
             Debug.Log("File at '" + absolutePath + "' doesn't exist.");
+        }*/
+    }
+
+    IEnumerator LoadImageInBackground()
+    {
+        string absolutePath = fileName;
+        // Use local path if the file name doesn't have supported 
+        if (!fileName.StartsWith("http://") && !fileName.StartsWith("https://"))
+        {
+            absolutePath = "file:///" + GetAbsolutePath(fileName);
+        }
+
+        // Start the download
+        WWW imageWWW = new WWW(absolutePath);
+
+        //Wait for the file to finish loading
+        while (!imageWWW.isDone)
+        {
+            yield return null;
+        }
+
+        // Test if the image is actually a supported movie
+        if (fileName.Contains(".ogv"))
+        {
+            // Get the movie from the WWW
+            MovieTexture movieTexture = imageWWW.movie;
+
+            while (!movieTexture.isReadyToPlay)
+            {
+                yield return movieTexture;
+            }
+            Debug.Log("Got movie texture");
+            // Give the movie to the renderer material
+            Sprite sprite = Sprite.Create(new Texture2D(movieTexture.width, movieTexture.height), new Rect(0, 0, movieTexture.width, movieTexture.height), new Vector2(0.5f, 0.5f));
+            MaterialPropertyBlock block = new MaterialPropertyBlock();
+            block.SetTexture("_MainTex", movieTexture);
+
+            SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();           
+            spriteRenderer.sprite = sprite;
+
+            spriteRenderer.SetPropertyBlock(block);
+
+            // Set to loop and play
+            movieTexture.loop = true;
+            movieTexture.Play();
+            Debug.Log("Playing");
+        }
+        else
+        {
+            Texture2D texture = new Texture2D(2, 2);
+            imageWWW.LoadImageIntoTexture(texture);
+
+            // Create a sprite from the new texture.
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            GetComponent<SpriteRenderer>().sprite = sprite;
         }
     }
 
@@ -100,14 +163,17 @@ public class SceneryImage : MonoBehaviour, SceneryObject
 
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
         Sprite sprite = spriteRenderer.sprite;
-        Vector3 leftTop = new Vector3(-sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
-        corners[i++] = transform.TransformPoint(leftTop);
-        Vector3 leftBot = new Vector3(-sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
-        corners[i++] = transform.TransformPoint(leftBot);
-        Vector3 rightTop = new Vector3(sprite.texture.width - sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
-        corners[i++] = transform.TransformPoint(rightTop);
-        Vector3 rightBot = new Vector3(sprite.texture.width - sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
-        corners[i++] = transform.TransformPoint(rightBot);
+        if (sprite != null)
+        {
+            Vector3 leftTop = new Vector3(-sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
+            corners[i++] = transform.TransformPoint(leftTop);
+            Vector3 leftBot = new Vector3(-sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
+            corners[i++] = transform.TransformPoint(leftBot);
+            Vector3 rightTop = new Vector3(sprite.texture.width - sprite.pivot.x, sprite.pivot.y) / sprite.pixelsPerUnit;
+            corners[i++] = transform.TransformPoint(rightTop);
+            Vector3 rightBot = new Vector3(sprite.texture.width - sprite.pivot.x, -sprite.texture.height + sprite.pivot.y) / sprite.pixelsPerUnit;
+            corners[i++] = transform.TransformPoint(rightBot);
+        }
 
         return corners;
     }
