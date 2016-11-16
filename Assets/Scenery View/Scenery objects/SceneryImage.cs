@@ -97,6 +97,9 @@ public class SceneryImage : MonoBehaviour, SceneryObject
             Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
             GetComponent<SpriteRenderer>().sprite = sprite;
         }
+
+        // Now that the sprite is loaded, setup animation (which requires the sprite's information)
+        GetComponent<AnimatedSceneryObject>().SetAnimation();
     }
 
     // Unload and unassign the previously loaded image. Free all memory that was allocated for the image.

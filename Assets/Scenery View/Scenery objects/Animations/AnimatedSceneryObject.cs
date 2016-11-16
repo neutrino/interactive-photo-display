@@ -32,7 +32,7 @@ public class AnimatedSceneryObject : MonoBehaviour, SceneryObject
         renderers = GetComponentsInChildren<Renderer>();
         textElements = GetComponentsInChildren<Text>();
 
-        SetAnimation();
+        //SetAnimation();
     }
 
     public void SetAnimation()
@@ -56,7 +56,10 @@ public class AnimatedSceneryObject : MonoBehaviour, SceneryObject
                 SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
                 if (spriteRenderer != null)
                 {
-                    mat.SetFloat("_HeightOffset", spriteRenderer.sprite.texture.height / spriteRenderer.sprite.pixelsPerUnit / 2.0f);
+                    if (spriteRenderer.sprite != null)
+                    {
+                        mat.SetFloat("_HeightOffset", spriteRenderer.sprite.texture.height / spriteRenderer.sprite.pixelsPerUnit / 2.0f);
+                    }
                 }
             }
         }
