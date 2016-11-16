@@ -31,8 +31,6 @@ public class AnimatedSceneryObject : MonoBehaviour, SceneryObject
         // Get renderers and text elements
         renderers = GetComponentsInChildren<Renderer>();
         textElements = GetComponentsInChildren<Text>();
-
-        //SetAnimation();
     }
 
     public void SetAnimation()
