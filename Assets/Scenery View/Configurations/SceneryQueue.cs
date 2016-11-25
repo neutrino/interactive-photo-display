@@ -4,11 +4,8 @@ using System;
 
 public class SceneryQueue : MonoBehaviour
 {
-
-    public string configurationsPath;
     public GameObject sceneryPrefab;
-    public Camera sceneryCamera;
-    public float cameraPixelsPerUnits = 100.0f;
+    public KeyCode sceneryChangeKey = KeyCode.Space;
 
     private System.DateTime previousSceneryLoadTime;
     private int currentSceneryIndex;
@@ -23,17 +20,12 @@ public class SceneryQueue : MonoBehaviour
         if (args.Length >= 2)
         {
             // Load configurations from the path given as a command line argument
-            configurations = Configurations.Load(args[1]);
-        }
-        else
-        {
-            // Load configurations from the path given in the editor.
-            configurations = Configurations.Load(configurationsPath);
-        }
+            Configurations configs = Configurations.Load(args[1]);
 
-        if (configurations != null)
-        {
-            BeginQueue(configurations);
+            if (configs != null)
+            {
+                BeginQueue(configs);
+            }
         }
     }
 
@@ -41,11 +33,20 @@ public class SceneryQueue : MonoBehaviour
     {
         if (configurations != null)
         {
-            // Check the time since the last scenery change and advance in queue if enough time has passed
             if (configurations.sceneries.Length > 1)
             {
-                DateTime currentTime = DateTime.Now;
-                if (currentTime >= previousSceneryLoadTime.AddSeconds(configurations.sceneryChangeInterval))
+                // Advance in queue if enough time has passed
+                if (configurations.sceneryChangeInterval > 0)
+                {
+                    DateTime currentTime = DateTime.Now;
+                    if (currentTime >= previousSceneryLoadTime.AddSeconds(configurations.sceneryChangeInterval))
+                    {
+                        previousSceneryLoadTime = currentTime;
+                        NextScenery();
+                    }
+                }
+                // Advance in queue via keyboard input
+                if (Input.GetKeyDown(sceneryChangeKey))
                 {
                     previousSceneryLoadTime = DateTime.Now;
                     NextScenery();
@@ -57,10 +58,9 @@ public class SceneryQueue : MonoBehaviour
     // Begin the queue by initializing whatever's needed from the configurations and creating the first scenery in queue
     public void BeginQueue(Configurations configurations)
     {
-        if (configurations != null && sceneryPrefab != null && sceneryCamera != null)
+        this.configurations = configurations;
+        if (configurations != null && sceneryPrefab != null)
         {
-            // Set the camera's size
-            sceneryCamera.orthographicSize = configurations.cameraHeight / cameraPixelsPerUnits;
             // Initialize a copy of the scenery queue (a copy so that it can be shuffled if needed)
             sceneryQueue = new string[configurations.sceneries.Length];
             configurations.sceneries.CopyTo(sceneryQueue, 0);
