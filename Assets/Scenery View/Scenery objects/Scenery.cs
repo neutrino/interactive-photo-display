@@ -6,6 +6,7 @@ using Kinect = Windows.Kinect;
 [System.Serializable]
 public class SceneryData : SceneryObjectData
 {
+    public int cameraHeight = 720;
     public SceneryImageData[] images;
     public SceneryTextData[] texts;
 }
@@ -17,6 +18,9 @@ public class Scenery : MonoBehaviour, SceneryObject
 
     public GameObject sceneryImagePrefab;
     public GameObject sceneryTextPrefab;
+    
+    [Space]
+    public int cameraPixelsPerUnits = 100;
 
     [Space]
     public Vector3 movementInput = Vector3.zero;
@@ -286,6 +290,13 @@ public class Scenery : MonoBehaviour, SceneryObject
     {
         SceneryData sceneryData = (SceneryData)sceneryObjectData;
 
+        // Set the camera's size
+        Camera cam = Camera.main;
+        if (cam != null)
+        {
+            cam.orthographicSize = sceneryData.cameraHeight / cameraPixelsPerUnits;
+        }
+        
         // First destroy any currently contained scenery objects
         foreach (SceneryObject sceneryObject in GetComponentsInChildren<SceneryObject>())
         {
