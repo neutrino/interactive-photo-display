@@ -5,11 +5,13 @@ using System;
 public class SceneryQueue : MonoBehaviour
 {
     public GameObject sceneryPrefab;
+    public GameObject sceneryTransitionPrefab;
     public KeyCode sceneryChangeKey = KeyCode.Space;
 
     private System.DateTime previousSceneryLoadTime;
     private int currentSceneryIndex;
     private GameObject currentSceneryObject = null;
+    private bool currentlyChangingScenery = false;
 
     private Configurations configurations;
     private string[] sceneryQueue;
@@ -42,14 +44,14 @@ public class SceneryQueue : MonoBehaviour
                     if (currentTime >= previousSceneryLoadTime.AddSeconds(configurations.sceneryChangeInterval))
                     {
                         previousSceneryLoadTime = currentTime;
-                        NextScenery();
+                        StartCoroutine("NextScenery");
                     }
                 }
                 // Advance in queue via keyboard input
                 if (Input.GetKeyDown(sceneryChangeKey))
                 {
                     previousSceneryLoadTime = DateTime.Now;
-                    NextScenery();
+                    StartCoroutine("NextScenery");
                 }
             }
         }
@@ -68,26 +70,51 @@ public class SceneryQueue : MonoBehaviour
             // Start the queue from the beginning
             currentSceneryIndex = -1;
             previousSceneryLoadTime = DateTime.Now;
-            NextScenery();
+            StartCoroutine("NextScenery");
         }
     }
 
     // Go to the next scenery in queue
-    private void NextScenery()
+    IEnumerator NextScenery()
     {
-        // Start by destroying the current scenery
-        if (currentSceneryObject != null)
+        if (!currentlyChangingScenery)
         {
-            DestroyImmediate(currentSceneryObject);
+            currentlyChangingScenery = true;
+
+            SceneryTransition sceneryTransition = null;
+            if (sceneryTransitionPrefab != null)
+            {
+                sceneryTransition = Instantiate(sceneryTransitionPrefab).GetComponent<SceneryTransition>();
+            }
+            if (sceneryTransition != null)
+            {
+                while (!sceneryTransition.FadedIn())
+                {
+                    yield return null;
+                }
+            }
+
+            // Start by destroying the current scenery
+            if (currentSceneryObject != null)
+            {
+                DestroyImmediate(currentSceneryObject);
+            }
+            // Advance in the queue and shuffle it every time we start at 0
+            currentSceneryIndex = ++currentSceneryIndex % configurations.sceneries.Length;
+            if (currentSceneryIndex == 0 && configurations.shuffleSceneries)
+            {
+                sceneryQueue = ShuffledSceneries(sceneryQueue, new System.Random());
+            }
+            // Create the new scenery
+            currentSceneryObject = CreateScenery(currentSceneryIndex);
+
+            if (sceneryTransition != null)
+            {
+                sceneryTransition.FadeOut();
+            }
+
+            currentlyChangingScenery = false;
         }
-        // Advance in the queue and shuffle it every time we start at 0
-        currentSceneryIndex = ++currentSceneryIndex % configurations.sceneries.Length;
-        if (currentSceneryIndex == 0 && configurations.shuffleSceneries)
-        {
-            sceneryQueue = ShuffledSceneries(sceneryQueue, new System.Random());
-        }
-        // Create the new scenery
-        currentSceneryObject = CreateScenery(currentSceneryIndex);
     }
 
     // Create a scenery object that's in the queue at sceneryIndex position
