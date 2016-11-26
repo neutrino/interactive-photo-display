@@ -255,7 +255,8 @@ public class Scenery : MonoBehaviour, SceneryObject
     {
         if (System.IO.File.Exists(sourcePath))
         {
-            filePath = sourcePath;
+            // Find the absolute path for future reference, because the scenery's file path could've be given relative to the .exe
+            filePath = System.IO.Path.GetFullPath(sourcePath);
             string json = System.IO.File.ReadAllText(sourcePath);
             SetData(JsonUtility.FromJson<SceneryData>(json));
         }
