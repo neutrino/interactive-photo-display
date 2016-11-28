@@ -16,7 +16,6 @@ public class Configurations
     public float kinectOffsetY = 0;
     public float kinectOffsetZ = 0;
     public float kinectSmoothing = 10;
-    public int cameraHeight = 720;
     public int sceneryChangeInterval = 0;
     public bool shuffleSceneries = false;
     public string[] sceneries;
