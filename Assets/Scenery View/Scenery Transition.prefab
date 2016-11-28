@@ -9,30 +9,30 @@ Prefab:
     m_Modifications: []
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 0}
-  m_RootGameObject: {fileID: 1000012827694892}
+  m_RootGameObject: {fileID: 1000010249450652}
   m_IsPrefabParent: 1
---- !u!1 &1000012827694892
+--- !u!1 &1000010249450652
 GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   serializedVersion: 4
   m_Component:
-  - 4: {fileID: 4000010944755898}
-  - 114: {fileID: 114000011665543112}
+  - 4: {fileID: 4000013338503752}
+  - 114: {fileID: 114000013027509622}
   m_Layer: 0
-  m_Name: Scenery Queue
+  m_Name: Scenery Transition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4000010944755898
+--- !u!4 &4000013338503752
 Transform:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012827694892}
+  m_GameObject: {fileID: 1000010249450652}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -40,19 +40,16 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
---- !u!114 &114000011665543112
+--- !u!114 &114000013027509622
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012827694892}
+  m_GameObject: {fileID: 1000010249450652}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe9c192e3738ef64abdd0e20e62b917a, type: 3}
+  m_Script: {fileID: 11500000, guid: 171b6c0d625af384a8543bfb5fe15f42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneryPrefab: {fileID: 1000011631167206, guid: 83733da6410b908468712d30a927a54f,
-    type: 2}
-  sceneryTransitionPrefab: {fileID: 1000010249450652, guid: 46a1439650d6d8c4bbc673c6dfe5edb9,
-    type: 2}
-  sceneryChangeKey: 32
+  blackTexture: {fileID: 2800000, guid: a37bfb29dd6c3dc4091583a32afd1b15, type: 3}
+  fadeTime: 3
