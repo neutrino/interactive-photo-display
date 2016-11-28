@@ -3,12 +3,14 @@ Shader "Animated/Sprite"
 	Properties
 	{
 		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
-		_Color ("Tint", Color) = (1,1,1,1)
-		[MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
+		_Color("Tint", Color) = (1,1,1,1)
+		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 			_AnimationXSpeed("Animation Horizontal Speed", Float) = 0
 			_AnimationYSpeed("Animation Vertical Speed", Float) = 0
 			_AnimationXMagnitude("Animation Horizontal Magnitude", Float) = 1
 			_AnimationYMagnitude("Animation Vertical Magnitude", Float) = 1
+			_TransparentColor("Transparent Color", Color) = (1,1,1,1)
+			_Threshold("Threshold", Float) = 0
 	}
 
 	SubShader
@@ -40,6 +42,8 @@ Shader "Animated/Sprite"
 		float _AnimationYSpeed;
 		float _AnimationYMagnitude;
 		float _HeightOffset;
+		fixed4 _TransparentColor;
+		float _Threshold;
 
 		struct Input
 		{
@@ -72,9 +76,22 @@ Shader "Animated/Sprite"
 
 		void surf (Input IN, inout SurfaceOutput o)
 		{
-			fixed4 c = SampleSpriteTexture (IN.uv_MainTex) * IN.color;
-			o.Albedo = c.rgb * c.a;
-			o.Alpha = c.a;
+			half4 c = tex2D(_MainTex, IN.uv_MainTex);
+
+			fixed4 output_c = c * IN.color;
+
+			half3 color_difference = c.xyz - _TransparentColor.xyz;
+			half color_distance = length(color_difference);
+
+			if (color_distance < _Threshold)
+			{
+				discard;
+			}
+
+
+			o.Albedo = output_c.rgb * c.a;
+			o.Alpha = output_c.a;
+
 		}
 		ENDCG
 	}
