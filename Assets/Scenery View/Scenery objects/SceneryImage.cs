@@ -12,6 +12,10 @@ public class SceneryImageData : SceneryObjectData
     public string fileName;
     public bool restrictHorizontalMovement;
     public bool restrictVerticalMovement;
+    public float transparencyRed;
+    public float transparencyGreen;
+    public float transparencyBlue;
+    public float transparencyThreshold;
 }
 
 
@@ -22,6 +26,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
     public string fileName;
     public bool restrictHorizontalMovement;
     public bool restrictVerticalMovement;
+    public Color transparencyColor;
+    public float transparencyThreshold;
 
     private IEnumerator loadingCoroutine;
 
@@ -100,6 +106,19 @@ public class SceneryImage : MonoBehaviour, SceneryObject
 
         // Now that the sprite is loaded, setup animation (which requires the sprite's information)
         GetComponent<AnimatedSceneryObject>().SetAnimation();
+
+        // Set additional material properties such as transparency
+        SetMaterialProperties();
+    }
+
+    private void SetMaterialProperties()
+    {
+        Material mat = GetComponent<SpriteRenderer>().material;
+        if (mat != null)
+        {
+            mat.SetColor("_TransparentColor", transparencyColor);
+            mat.SetFloat("_Threshold", transparencyThreshold);
+        }
     }
 
     // Unload and unassign the previously loaded image. Free all memory that was allocated for the image.
@@ -207,6 +226,12 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         sceneryImageData.fileName = fileName;
         sceneryImageData.restrictHorizontalMovement = restrictHorizontalMovement;
         sceneryImageData.restrictVerticalMovement = restrictVerticalMovement;
+        Material mat = GetComponent<Material>();
+        Color col = mat.GetColor("Transparent Color");
+        sceneryImageData.transparencyRed = col.r;
+        sceneryImageData.transparencyGreen = col.g;
+        sceneryImageData.transparencyBlue = col.b;
+        sceneryImageData.transparencyThreshold = mat.GetFloat("Threshold");
         return sceneryImageData;
     }
     public void SetData(SceneryObjectData sceneryObjectData)
@@ -218,6 +243,9 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         fileName = sceneryImageData.fileName;
         restrictHorizontalMovement = sceneryImageData.restrictHorizontalMovement;
         restrictVerticalMovement = sceneryImageData.restrictVerticalMovement;
+        transparencyColor = new Color(sceneryImageData.transparencyRed, sceneryImageData.transparencyGreen, sceneryImageData.transparencyBlue, 1);
+        transparencyThreshold = sceneryImageData.transparencyThreshold;
+
         LoadImage();
     }
 }
