@@ -16,6 +16,10 @@ public class Configurations
     public float kinectOffsetY = 0;
     public float kinectOffsetZ = 0;
     public float kinectSmoothing = 10;
+    public float transitionDuration = 3;
+    public float transitionColorRed = 0;
+    public float transitionColorGreen = 0;
+    public float transitionColorBlue = 0;
     public int sceneryChangeInterval = 0;
     public bool shuffleSceneries = false;
     public string[] sceneries;
