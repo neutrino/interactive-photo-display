@@ -5,10 +5,26 @@ using Kinect = Windows.Kinect;
 
 public class BodyTracker : MonoBehaviour
 {
-
-    public delegate void BodyEnteredDelegate(ulong id);
+    public class BodyEnteredEventArgs : System.EventArgs
+    {
+        public ulong id;
+        public BodyEnteredEventArgs(ulong id)
+        {
+            this.id = id;
+        }
+    }
+    public class BodyLeftEventArgs : System.EventArgs
+    {
+        public ulong id;
+        public BodyLeftEventArgs(ulong id)
+        {
+            this.id = id;
+        }
+    }
+    
+    public delegate void BodyEnteredDelegate(object bodyTracker, BodyEnteredEventArgs bodyEnteredInfo);
     public event BodyEnteredDelegate BodyEntered;
-    public delegate void BodyLeftDelegate(ulong id);
+    public delegate void BodyLeftDelegate(object bodyTracker, BodyLeftEventArgs bodyLeftInfo);
     public event BodyLeftDelegate BodyLeft;
 
     private Kinect.KinectSensor kinectSensor;
@@ -24,8 +40,8 @@ public class BodyTracker : MonoBehaviour
         StartKinect();
 
         // Add simple debug log handlers for when a body enters for tracking.
-        BodyEntered += new BodyEnteredDelegate(id => Debug.Log("Body " + id + " has entered."));
-        BodyLeft += new BodyLeftDelegate(id => Debug.Log("Body " + id + " has left."));
+        BodyEntered += (bodyTracker, args) => Debug.Log("Body " + args.id + " has entered.");
+        BodyLeft += (bodyTracker, args) => Debug.Log("Body " + args.id + " has left.");
     }
     void OnDestroy()
     {
@@ -119,27 +135,23 @@ public class BodyTracker : MonoBehaviour
     // Handler for the body frame reader's FrameArrived event
     private void BodyFrameReader_FrameArrived(object sender, Kinect.BodyFrameArrivedEventArgs e)
     {
-        UpdateBodyData();
+        UpdateBodyData(e.FrameReference.AcquireFrame());
     }
 
-    // Update the body data to match the latest frame
-    private void UpdateBodyData()
+    // Update the body data to match the frame
+    private void UpdateBodyData(Kinect.BodyFrame frame)
     {
-        if (bodyFrameReader != null)
+        if (frame != null)
         {
-            Kinect.BodyFrame frame = bodyFrameReader.AcquireLatestFrame();
-            if (frame != null)
+            if (bodyData == null)
             {
-                if (bodyData == null)
-                {
-                    bodyData = new Kinect.Body[kinectSensor.BodyFrameSource.BodyCount];
-                }
-                // Note: Don't do anything with bodyData before disposing the frame. This seems to break a lot of things for unknown reasons.
-                frame.GetAndRefreshBodyData(bodyData);
-                frame.Dispose();
-                frame = null;
-                UpdateTrackedIds();
+                bodyData = new Kinect.Body[kinectSensor.BodyFrameSource.BodyCount];
             }
+            // Note: Don't do anything with bodyData before disposing the frame. This seems to break a lot of things for unknown reasons.
+            frame.GetAndRefreshBodyData(bodyData);
+            frame.Dispose();
+            frame = null;
+            UpdateTrackedIds();
         }
     }
 
@@ -155,7 +167,7 @@ public class BodyTracker : MonoBehaviour
             if (body == null || !body.IsTracked || System.Array.IndexOf(bodyData, body) == -1)
             {
                 // A body has left - Call the event and mark the id for removal
-                BodyLeft(id);
+                BodyLeft(this, new BodyLeftEventArgs(id));
                 untrackedIds[i++] = id;
             }
         }
@@ -177,7 +189,7 @@ public class BodyTracker : MonoBehaviour
             if (body != null && body.IsTracked && !trackedBodies.ContainsKey(body.TrackingId))
             {
                 // A body has entered - Call the event and add the id and body to trackedIds.
-                BodyEntered(body.TrackingId);
+                BodyEntered(this, new BodyEnteredEventArgs(body.TrackingId));
                 trackedBodies.Add(body.TrackingId, body);
             }
         }
