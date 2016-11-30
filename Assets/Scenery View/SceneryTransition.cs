@@ -4,13 +4,16 @@ using System.Collections;
 public class SceneryTransition : MonoBehaviour
 {
 
-    public Texture blackTexture;
-    public float fadeTime = 1;
+    public Texture texture;
+
+    [HideInInspector]
+    public float duration = 3;
+    [HideInInspector]
+    public Color color = Color.black;
 
     private float timer = 0;
     private float fadingDirection = 1;
     private float alpha = 0;
-
     private bool fadedIn = false;
 
     void Start()
@@ -23,10 +26,10 @@ public class SceneryTransition : MonoBehaviour
 
         if (fadingDirection > 0)
         {
-            if (timer < fadeTime)
+            if (timer < duration)
             {
                 timer += Time.deltaTime;
-                alpha = timer / fadeTime;
+                alpha = timer / duration;
             }
             else
             {
@@ -38,7 +41,7 @@ public class SceneryTransition : MonoBehaviour
             if (timer > 0)
             {
                 timer -= Time.deltaTime;
-                alpha = timer / fadeTime;
+                alpha = timer / duration;
             }
             else
             {
@@ -64,10 +67,10 @@ public class SceneryTransition : MonoBehaviour
 
     void OnGUI()
     {
-        if (blackTexture != null && alpha > 0)
+        if (texture != null && alpha > 0)
         {
-            GUI.color = new Color(0, 0, 0, alpha);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), blackTexture);
+            GUI.color = new Color(color.r, color.g, color.b, alpha);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), texture);
         }
     }
 

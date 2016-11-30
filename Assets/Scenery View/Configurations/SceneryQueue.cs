@@ -88,6 +88,8 @@ public class SceneryQueue : MonoBehaviour
             }
             if (sceneryTransition != null)
             {
+                sceneryTransition.color = new Color(configurations.transitionColorRed, configurations.transitionColorGreen, configurations.transitionColorBlue);
+                sceneryTransition.duration = configurations.transitionDuration;
                 while (!sceneryTransition.FadedIn())
                 {
                     yield return null;
