@@ -29,7 +29,9 @@ public class SceneryImage : MonoBehaviour, SceneryObject
     public Color transparencyColor;
     public float transparencyThreshold;
 
+    private bool imageLoaded;
     private IEnumerator loadingCoroutine;
+    private float pixelsPerUnit = 100;
 
     void OnDestroy()
     {
@@ -48,6 +50,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
 
     IEnumerator LoadImageInBackground()
     {
+        imageLoaded = false;
+
         string absolutePath = fileName;
         
         // Get the path
@@ -77,7 +81,7 @@ public class SceneryImage : MonoBehaviour, SceneryObject
             }
 
             // Create new sprite with the right dimensions
-            Sprite sprite = Sprite.Create(new Texture2D(movieTexture.width, movieTexture.height), new Rect(0, 0, movieTexture.width, movieTexture.height), new Vector2(0.5f, 0.5f));
+            Sprite sprite = Sprite.Create(new Texture2D(movieTexture.width, movieTexture.height), new Rect(0, 0, movieTexture.width, movieTexture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit, 0, SpriteMeshType.FullRect);
 
             // Create new MaterialPropertyBlock and assign the movieTexture to it
             MaterialPropertyBlock block = new MaterialPropertyBlock();
@@ -100,7 +104,7 @@ public class SceneryImage : MonoBehaviour, SceneryObject
             imageWWW.LoadImageIntoTexture(texture);
 
             // Create a sprite from the new texture.
-            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit, 0, SpriteMeshType.FullRect);
             GetComponent<SpriteRenderer>().sprite = sprite;
         }
 
@@ -109,6 +113,13 @@ public class SceneryImage : MonoBehaviour, SceneryObject
 
         // Set additional material properties such as transparency
         SetMaterialProperties();
+
+        imageLoaded = true;
+    }
+
+    public bool ImageLoaded()
+    {
+        return imageLoaded;
     }
 
     private void SetMaterialProperties()
