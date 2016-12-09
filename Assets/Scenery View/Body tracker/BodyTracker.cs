@@ -246,4 +246,19 @@ public class BodyTracker : MonoBehaviour
     {
         return new Vector3(cameraSpacePoint.X, cameraSpacePoint.Y, cameraSpacePoint.Z);
     }
+
+    public Vector2 JointPositionOnScreen(Kinect.Body body, Kinect.JointType jointType)
+    {
+        if (body != null && body.IsTracked)
+        {
+            Kinect.Joint joint = body.Joints[jointType];
+            if (joint.TrackingState == Kinect.TrackingState.Tracked)
+            {
+                Kinect.ColorSpacePoint point = kinectSensor.CoordinateMapper.MapCameraPointToColorSpace(joint.Position);
+                Vector2 pointOnScreen = new Vector2(point.X / 1920f, point.Y / 1080f);
+                return pointOnScreen;
+            }
+        }
+        return Vector2.zero;
+    }
 }
