@@ -9,6 +9,7 @@ public class SceneryData : SceneryObjectData
     public int cameraHeight = 720;
     public SceneryImageData[] images;
     public SceneryTextData[] texts;
+    public SceneryPopUpData[] popUps;
 }
 
 
@@ -18,6 +19,7 @@ public class Scenery : MonoBehaviour, SceneryObject
 
     public GameObject sceneryImagePrefab;
     public GameObject sceneryTextPrefab;
+    public GameObject sceneryPopUpPrefab;
     
     [Space]
     public int cameraPixelsPerUnits = 100;
@@ -285,6 +287,14 @@ public class Scenery : MonoBehaviour, SceneryObject
             sceneryData.texts[i++] = (SceneryTextData)sceneryText.GetData();
         }
 
+        SceneryPopUp[] sceneryPopUps = GetComponentsInChildren<SceneryPopUp>();
+        sceneryData.popUps = new SceneryPopUpData[sceneryPopUps.Length];
+        i = 0;
+        foreach (SceneryPopUp sceneryPopUp in sceneryPopUps)
+        {
+            sceneryData.popUps[i++] = (SceneryPopUpData)sceneryPopUp.GetData();
+        }
+
         return sceneryData;
     }
     public void SetData(SceneryObjectData sceneryObjectData)
@@ -323,6 +333,16 @@ public class Scenery : MonoBehaviour, SceneryObject
             if (sceneryText != null)
             {
                 sceneryText.SetData(sceneryTextData);
+            }
+        }
+
+        // Create new pop-up elements from data
+        foreach (SceneryPopUpData sceneryPopUpData in sceneryData.popUps)
+        {
+            SceneryPopUp sceneryPopUp = ((GameObject)Instantiate(sceneryPopUpPrefab, transform)).GetComponent<SceneryPopUp>();
+            if (sceneryPopUp != null)
+            {
+                sceneryPopUp.SetData(sceneryPopUpData);
             }
         }
     }

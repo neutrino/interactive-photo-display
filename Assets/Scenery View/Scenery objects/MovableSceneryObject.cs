@@ -38,6 +38,12 @@ public class MovableSceneryObject : MonoBehaviour, SceneryObject
         transform.localScale = newScale;
     }
 
+    // Set the base scale
+    public void SetBaseScale(Vector3 scale)
+    {
+        startingScale = scale;
+    }
+
     public Vector3 GetRelativePosition()
     {
         return transform.localPosition - startingPosition;
