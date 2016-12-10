@@ -86,24 +86,20 @@ public class VideoView : MonoBehaviour
     // Handler for when the color frame reader's frame arrives.
     private void ColorFrameReader_FrameArrived(object sender, Kinect.ColorFrameArrivedEventArgs e)
     {
-        UpdateTexture();
+        UpdateTexture(e.FrameReference.AcquireFrame());
     }
 
     // Update the texture to the latest frame from the reader
-    private void UpdateTexture()
+    private void UpdateTexture(Kinect.ColorFrame frame)
     {
-        if (colorFrameReader != null)
+        if (frame != null)
         {
-            var frame = colorFrameReader.AcquireLatestFrame();
-            if (frame != null)
-            {
-                frame.CopyConvertedFrameDataToArray(textureData, Kinect.ColorImageFormat.Rgba);
-                texture.LoadRawTextureData(textureData);
-                texture.Apply();
-                renderer.sharedMaterial.mainTexture = texture;
-                frame.Dispose();
-                frame = null;
-            }
+            frame.CopyConvertedFrameDataToArray(textureData, Kinect.ColorImageFormat.Rgba);
+            texture.LoadRawTextureData(textureData);
+            texture.Apply();
+            renderer.sharedMaterial.mainTexture = texture;
+            frame.Dispose();
+            frame = null;
         }
     }
 
