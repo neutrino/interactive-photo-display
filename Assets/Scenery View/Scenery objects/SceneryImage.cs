@@ -237,12 +237,12 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         sceneryImageData.fileName = fileName;
         sceneryImageData.restrictHorizontalMovement = restrictHorizontalMovement;
         sceneryImageData.restrictVerticalMovement = restrictVerticalMovement;
-        Material mat = GetComponent<Material>();
-        Color col = mat.GetColor("Transparent Color");
+        Material mat = GetComponent<SpriteRenderer>().material;
+        Color col = mat.GetColor("_TransparentColor");
         sceneryImageData.transparencyRed = col.r;
         sceneryImageData.transparencyGreen = col.g;
         sceneryImageData.transparencyBlue = col.b;
-        sceneryImageData.transparencyThreshold = mat.GetFloat("Threshold");
+        sceneryImageData.transparencyThreshold = mat.GetFloat("_Threshold");
         return sceneryImageData;
     }
     public void SetData(SceneryObjectData sceneryObjectData)
