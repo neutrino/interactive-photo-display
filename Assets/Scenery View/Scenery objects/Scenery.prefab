@@ -55,11 +55,10 @@ MonoBehaviour:
     type: 2}
   sceneryTextPrefab: {fileID: 1000013240220776, guid: 5a5eb04f21a234640820e46ed7c78ae2,
     type: 2}
+  sceneryPopUpPrefab: {fileID: 1000013844937880, guid: 21aa32b422bbb1d4d8f93a3fe97ba8a4,
+    type: 2}
+  cameraPixelsPerUnits: 100
   movementInput: {x: 0, y: 0, z: 0}
   minImageDepth: -1
   maxImageDepth: 0
-  useKinectInput: 1
-  inputMultiplier: {x: -10, y: -10, z: -1}
-  inputOffset: {x: 0, y: -0.75, z: -2}
-  inputSmoothing: 10
   bodyTracker: {fileID: 0}
