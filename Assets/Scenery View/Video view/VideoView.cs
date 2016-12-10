@@ -103,21 +103,4 @@ public class VideoView : MonoBehaviour
         }
     }
 
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.green;
-        BodyTracker bodyTracker = FindObjectOfType<BodyTracker>();
-        Kinect.Body body = bodyTracker.NearestBody();
-        if (body != null)
-        {
-            Vector2 pos = bodyTracker.JointPositionOnScreen(body, Kinect.JointType.HandRight);
-            Vector2 posOnVideo = transform.position;
-            posOnVideo.x -= Mathf.Abs(transform.localScale.x) / 2f;
-            posOnVideo.x += pos.x * Mathf.Abs(transform.localScale.x);
-            posOnVideo.y += Mathf.Abs(transform.localScale.y) / 2f;
-            posOnVideo.y -= pos.y * Mathf.Abs(transform.localScale.y);
-            Gizmos.DrawSphere(posOnVideo, 0.5f);
-        }
-    }
-
 }
