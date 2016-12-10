@@ -247,18 +247,20 @@ public class BodyTracker : MonoBehaviour
         return new Vector3(cameraSpacePoint.X, cameraSpacePoint.Y, cameraSpacePoint.Z);
     }
 
+    // Map a joint's CameraSpacePoint to 2D space with values ranging from 0 to 1
     public Vector2 JointPositionOnScreen(Kinect.Body body, Kinect.JointType jointType)
     {
+        Vector2 pointOnScreen = Vector2.zero;
         if (body != null && body.IsTracked)
         {
             Kinect.Joint joint = body.Joints[jointType];
             if (joint.TrackingState == Kinect.TrackingState.Tracked)
             {
                 Kinect.ColorSpacePoint point = kinectSensor.CoordinateMapper.MapCameraPointToColorSpace(joint.Position);
-                Vector2 pointOnScreen = new Vector2(point.X / 1920f, point.Y / 1080f);
-                return pointOnScreen;
+                // The Kinect V2's color view's resolution is 1920x1080
+                pointOnScreen = new Vector2(point.X / 1920f, point.Y / 1080f);
             }
         }
-        return Vector2.zero;
+        return pointOnScreen;
     }
 }
