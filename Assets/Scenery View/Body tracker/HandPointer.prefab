@@ -9,60 +9,48 @@ Prefab:
     m_Modifications: []
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 0}
-  m_RootGameObject: {fileID: 1000012368183020}
+  m_RootGameObject: {fileID: 1000013460369334}
   m_IsPrefabParent: 1
---- !u!1 &1000012368183020
+--- !u!1 &1000013460369334
 GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   serializedVersion: 4
   m_Component:
-  - 4: {fileID: 4000014268017768}
-  - 114: {fileID: 114000014109216078}
-  - 114: {fileID: 114000012254234216}
+  - 4: {fileID: 4000011832149824}
+  - 114: {fileID: 114000010859540610}
   m_Layer: 0
-  m_Name: Body Tracker
+  m_Name: HandPointer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4000014268017768
+--- !u!4 &4000011832149824
 Transform:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012368183020}
+  m_GameObject: {fileID: 1000013460369334}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 1.476656, y: -0.16898632, z: 1.4189663}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
---- !u!114 &114000012254234216
+--- !u!114 &114000010859540610
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012368183020}
+  m_GameObject: {fileID: 1000013460369334}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f52c12ec07ca5eb4ea81ffb6be92e136, type: 3}
+  m_Script: {fileID: 11500000, guid: d97e05455b1869842853174f0cfecdec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bodyTracker: {fileID: 114000014109216078}
---- !u!114 &114000014109216078
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012368183020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 082cf7e8ff8e379408f56c6c67f19483, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  handPointerPrefab: {fileID: 1000013460369334, guid: 4f77e659c7b3d27429abd5ed113bcb18,
-    type: 2}
+  popupActivationDistance: 100
+  textureHandOpen: {fileID: 2800000, guid: afcddb24fc2efd145a66ffc22b59ea81, type: 3}
+  textureHandClosed: {fileID: 2800000, guid: afcddb24fc2efd145a66ffc22b59ea81, type: 3}

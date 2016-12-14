@@ -23,7 +23,8 @@ public class SceneryQueueEditor : Editor
             Configurations configs = Configurations.Load(configurationsPath);
             if (configs != null)
             {
-                sceneryQueue.BeginQueue(configs);
+                Configurations.SetInstance(configs);
+                sceneryQueue.BeginQueue();
             }
         }
         EditorGUI.EndDisabledGroup();
