@@ -20,24 +20,38 @@ public class Configurations
     public float transitionColorRed = 0;
     public float transitionColorGreen = 0;
     public float transitionColorBlue = 0;
+    public bool handAlwaysActive = false;
+    public bool multipleHandUsers = true;
+    public float handActivationTime = 1;
+    public float handDeactivationTime = 1;
     public int sceneryChangeInterval = 0;
     public bool shuffleSceneries = false;
     public string[] sceneries;
 
+    private static Configurations instance;
+
+    public static Configurations Instance()
+    {
+        return instance;
+    }
+    public static void SetInstance(Configurations configurations)
+    {
+        instance = configurations;
+    }
+
     // Load and return a Configurations object from a .json file
     public static Configurations Load(string path)
     {
+        Configurations configurations = null;
         if (System.IO.File.Exists(path))
         {
             string json = "";
             try
             {
                 json = System.IO.File.ReadAllText(path);
-                Configurations c = null;
                 try
                 {
-                    c = JsonUtility.FromJson<Configurations>(json);
-                    return c;
+                    configurations = JsonUtility.FromJson<Configurations>(json);
                 }
                 catch (System.Exception e)
                 {
@@ -53,7 +67,7 @@ public class Configurations
         {
             Debug.Log("Error in loading configurations: File \"" + path + "\" doesn't exist.");
         }
-        return null;
+        return configurations;
     }
     // Save a Configurations object to a .json file
     public static void Save(Configurations configurations, string path)
