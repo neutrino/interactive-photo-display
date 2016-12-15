@@ -38,7 +38,7 @@ public class HandPointer : MonoBehaviour
         if (configs != null)
         {
             activationTime = configs.handActivationTime;
-            activationTime = configs.handDeactivationTime;
+            deactivationTime = configs.handDeactivationTime;
         }
         
         // Keep track of time and change the value of keptUp according to how long the hand has been kept up
@@ -102,9 +102,9 @@ public class HandPointer : MonoBehaviour
                 foreach (SceneryPopUp popup in FindObjectsOfType<SceneryPopUp>())
                 {
                     Vector2 popupScreenPosition = Camera.main.WorldToScreenPoint(popup.transform.position);
-                    if (Vector2.Distance(screenPosition, popupScreenPosition) < popupActivationDistance)
+                    if (popup.ScreenPointCloseEnough(screenPosition))
                     {
-                        popup.SetVisibility(!popup.visible);
+                        popup.ToggleVisibility();
                     }
                 }
             }
@@ -200,7 +200,8 @@ public class HandPointer : MonoBehaviour
         // Change color according to hand state. (temporary?)
         if (active)
         {
-            Rect position = new Rect(PositionOnScreen(), new Vector2(textureHandOpen.width, textureHandOpen.height));
+            Vector2 textureSize = new Vector2(textureHandOpen.width, textureHandOpen.height);
+            Rect position = new Rect(PositionOnScreen() - textureSize / 2.0f, textureSize);
             switch (HandState())
             {
                 case Kinect.HandState.Open:

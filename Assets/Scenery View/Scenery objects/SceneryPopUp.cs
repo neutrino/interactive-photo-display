@@ -29,28 +29,43 @@ public class SceneryPopUpData : SceneryObjectData
 [RequireComponent(typeof(MovableSceneryObject))]
 public class SceneryPopUp : MonoBehaviour, SceneryObject
 {
-    public bool visible;
     public bool alwaysVisible;
     public float targetScale = 0f;
     public float animationSpeed = 1f;
+    public float handOnIconMaxDistance = 50.0f;
+
+    public Texture iconTexture;
+
+    private bool visible;
 
     private MovableSceneryObject movableSceneryObject;
+    private Image backgroundImage;
+    private RectTransform backgroundImageTransform;
 
-    void Start()
+    void Awake()
     {
         movableSceneryObject = GetComponent<MovableSceneryObject>();
+        backgroundImage = GetComponentInChildren<Image>();
+        if (backgroundImage != null)
+        {
+            backgroundImageTransform = backgroundImage.GetComponent<RectTransform>();
+        }
     }
 
     void Update()
     {
         // Smooth scaling to target scale
-        movableSceneryObject.SetBaseScale(new Vector3(1, Mathf.Lerp(transform.localScale.y, targetScale, Time.deltaTime * animationSpeed), 1));
-
-        // Shortcut key for toggling visibility
-        if (Input.GetKeyDown(KeyCode.KeypadEnter))
+        if (backgroundImageTransform != null)
         {
-            SetVisibility(!visible);
+            Vector3 scale = backgroundImageTransform.localScale;
+            scale.y += (targetScale - scale.y) * Time.deltaTime * animationSpeed;
+            backgroundImageTransform.localScale = scale;
         }
+    }
+
+    public void ToggleVisibility()
+    {
+        SetVisibility(!visible);
     }
 
     public void SetVisibility(bool isVisible)
@@ -70,6 +85,39 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         }
     }
 
+    public bool ScreenPointCloseEnough(Vector2 pointOnScreen)
+    {
+        if (visible)
+        {
+            Rect rect = RectangleOnScreen();
+            return pointOnScreen.x >= rect.xMin && pointOnScreen.x <= rect.xMax && pointOnScreen.x >= rect.yMin && pointOnScreen.y <= rect.yMax;
+        }
+        else
+        {
+            Vector2 myPositionOnScreen = RectangleOnScreen().center;
+            return Vector2.Distance(pointOnScreen, myPositionOnScreen) < handOnIconMaxDistance;
+        }
+    }
+    
+    public Rect RectangleOnScreen()
+    {
+        Rect rect = new Rect();
+        if (backgroundImageTransform != null)
+        {
+            Rect transformRect = backgroundImageTransform.rect;
+            Camera camera = Camera.main;
+            Vector2 leftTop = camera.WorldToScreenPoint(backgroundImageTransform.TransformPoint(transformRect.xMin, transformRect.yMax, 0));
+            Vector2 rightBot = camera.WorldToScreenPoint(backgroundImageTransform.TransformPoint(transformRect.xMax, transformRect.yMin, 0));
+            rect.xMin = leftTop.x;
+            rect.xMax = rightBot.x;
+            rect.yMin = Screen.height - leftTop.y;
+            rect.yMax = Screen.height - rightBot.y;
+        }
+
+        return rect;
+    }
+
+    
     // SceneryObject interface methods
     public SceneryObjectData GetData()
     {
@@ -90,8 +138,6 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
             sceneryPopUpData.textAlpha = textComponent.color.a;
         }
 
-        Image backgroundImage = GetComponentInChildren<Image>();
-
         if (backgroundImage != null)
         {
             sceneryPopUpData.backgroundRed = backgroundImage.color.r;
@@ -99,9 +145,7 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
             sceneryPopUpData.backgroundBlue = backgroundImage.color.b;
             sceneryPopUpData.backgroundAlpha = backgroundImage.color.a;
 
-            RectTransform backgroundTransform = backgroundImage.GetComponent<RectTransform>();
-
-            sceneryPopUpData.width = backgroundTransform.sizeDelta.x;
+            sceneryPopUpData.width = backgroundImageTransform.sizeDelta.x;
         }
 
         Canvas canvasComponent = GetComponentInChildren<Canvas>();
@@ -118,7 +162,7 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
             }
         }
 
-
+        
 
         return sceneryPopUpData;
     }
@@ -145,15 +189,11 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
             textComponent.color = new Color(sceneryPopUpData.textRed, sceneryPopUpData.textGreen, sceneryPopUpData.textBlue, sceneryPopUpData.textAlpha);
         }
 
-        Image backgroundImage = GetComponentInChildren<Image>();
-
         if (backgroundImage != null)
         {
             backgroundImage.color = new Color(sceneryPopUpData.backgroundRed, sceneryPopUpData.backgroundGreen, sceneryPopUpData.backgroundBlue, sceneryPopUpData.backgroundAlpha);
 
-            RectTransform backgroundTransform = backgroundImage.GetComponent<RectTransform>();
-
-            backgroundTransform.sizeDelta = new Vector2(sceneryPopUpData.width, 0f);
+            backgroundImageTransform.sizeDelta = new Vector2(sceneryPopUpData.width, 0f);
         }
 
         Canvas canvasComponent = GetComponentInChildren<Canvas>();
@@ -168,6 +208,18 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
             {
                 canvasComponent.sortingOrder = 0;
             }
+        }
+    }
+
+    void OnGUI()
+    {
+        if (iconTexture != null && !visible)
+        {
+            Vector2 center = RectangleOnScreen().center;
+            Vector2 textureSize = new Vector2(iconTexture.width, iconTexture.height) * 0.5f;
+            Vector2 point = new Vector2(center.x - textureSize.x / 2.0f, center.y - textureSize.y / 2.0f);
+            
+            GUI.DrawTexture(new Rect(point, textureSize), iconTexture);
         }
     }
 }

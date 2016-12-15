@@ -92,7 +92,7 @@ Transform:
   m_GameObject: {fileID: 1000013844937880}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 0, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
   - {fileID: 224000013889039638}
@@ -158,9 +158,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37901e4c2228c1349ae1d0c4bf3d7934, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  visible: 0
+  alwaysVisible: 0
   targetScale: 0
   animationSpeed: 8
+  iconTexture: {fileID: 2800000, guid: c46e725c60dee2341a4aa480df23438d, type: 3}
 --- !u!114 &114000010739790938
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -206,8 +207,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "Hei t\xE4\xE4 juttu taitaa ehk\xE4 toimia. /b l\xE4ski\xE4 teksti\xE4 ei
-    silti n\xE4y.../"
+  m_Text: 
 --- !u!114 &114000013414243036
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -329,7 +329,7 @@ RectTransform:
   m_GameObject: {fileID: 1000012560368188}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 0, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
   - {fileID: 224000011732704446}
