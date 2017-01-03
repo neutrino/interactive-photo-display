@@ -7,21 +7,23 @@ public class BodyTracker : MonoBehaviour
 {
     public class BodyEnteredEventArgs : System.EventArgs
     {
-        public ulong id;
-        public BodyEnteredEventArgs(ulong id)
+        public Kinect.Body body;
+        public BodyEnteredEventArgs(Kinect.Body body)
         {
-            this.id = id;
+            this.body = body;
         }
     }
     public class BodyLeftEventArgs : System.EventArgs
     {
-        public ulong id;
-        public BodyLeftEventArgs(ulong id)
+        public Kinect.Body body;
+        public BodyLeftEventArgs(Kinect.Body body)
         {
-            this.id = id;
+            this.body = body;
         }
     }
-    
+
+    public GameObject handPointerPrefab;
+
     public delegate void BodyEnteredDelegate(object bodyTracker, BodyEnteredEventArgs bodyEnteredInfo);
     public event BodyEnteredDelegate BodyEntered;
     public delegate void BodyLeftDelegate(object bodyTracker, BodyLeftEventArgs bodyLeftInfo);
@@ -32,17 +34,17 @@ public class BodyTracker : MonoBehaviour
     private Kinect.Body[] bodyData;
     private Dictionary<ulong, Kinect.Body> trackedBodies = new Dictionary<ulong, Kinect.Body>();
 
-
-    // Monobehaviour messages
+    private Kinect.Body activeControllerBody;
 
     void Start()
     {
         StartKinect();
 
-        // Add simple debug log handlers for when a body enters for tracking.
-        BodyEntered += (bodyTracker, args) => Debug.Log("Body " + args.id + " has entered.");
-        BodyLeft += (bodyTracker, args) => Debug.Log("Body " + args.id + " has left.");
+        // Add handlers for body entering and leaving events
+        BodyEntered += BodyTracker_BodyEntered;
+        BodyLeft += BodyTracker_BodyLeft;
     }
+
     void OnDestroy()
     {
         CloseKinect();
@@ -55,6 +57,11 @@ public class BodyTracker : MonoBehaviour
     public Dictionary<ulong, Kinect.Body> TrackedBodies()
     {
         return trackedBodies;
+    }
+
+    public Kinect.Body ActiveControllerBody()
+    {
+        return activeControllerBody;
     }
 
     // Returns the body nearest to the camera.
@@ -76,6 +83,37 @@ public class BodyTracker : MonoBehaviour
             return nearestBody;
         }
         return nearestBody;
+    }
+
+    // Finds and returns the body with the given TrackingId or null if there is none.
+    public Kinect.Body FindBodyWithId(ulong id)
+    {
+        foreach (Kinect.Body body in trackedBodies.Values)
+        {
+            if (body.TrackingId == id)
+            {
+                return body;
+            }
+        }
+        return null;
+    }
+
+
+    // Map a joint's CameraSpacePoint to 2D space with values ranging from 0 to 1 (Could this be a static method?)
+    public Vector2 JointPositionOnScreen(Kinect.Body body, Kinect.JointType jointType)
+    {
+        Vector2 pointOnScreen = Vector2.zero;
+        if (body != null && body.IsTracked)
+        {
+            Kinect.Joint joint = body.Joints[jointType];
+            if (joint.TrackingState == Kinect.TrackingState.Tracked)
+            {
+                Kinect.ColorSpacePoint point = kinectSensor.CoordinateMapper.MapCameraPointToColorSpace(joint.Position);
+                // The Kinect V2's color view's resolution is 1920x1080
+                pointOnScreen = new Vector2(point.X / 1920f, point.Y / 1080f);
+            }
+        }
+        return pointOnScreen;
     }
 
 
@@ -138,6 +176,35 @@ public class BodyTracker : MonoBehaviour
         UpdateBodyData(e.FrameReference.AcquireFrame());
     }
 
+    // Handler for BodyEntered event
+    private void BodyTracker_BodyEntered(object bodyTracker, BodyEnteredEventArgs bodyEnteredInfo)
+    {
+        Debug.Log("Body " + bodyEnteredInfo.body.TrackingId + " has entered.");
+
+        if (handPointerPrefab != null)
+        {
+            if (bodyEnteredInfo.body != null)
+            {
+                HandPointer handPointerLeft = Instantiate(handPointerPrefab).GetComponent<HandPointer>();
+                handPointerLeft.LinkToBody(bodyEnteredInfo.body, HandPointer.Side.Left);
+                HandPointer handPointerRight = Instantiate(handPointerPrefab).GetComponent<HandPointer>();
+                handPointerRight.LinkToBody(bodyEnteredInfo.body, HandPointer.Side.Right);
+            }
+        }
+    }
+    // Handler for BodyLeft event
+    private void BodyTracker_BodyLeft(object bodyTracker, BodyLeftEventArgs bodyLeftInfo)
+    {
+        Debug.Log("Body " + bodyLeftInfo.body.TrackingId + " has left.");
+        foreach (HandPointer handPointer in FindObjectsOfType<HandPointer>())
+        {
+            if (handPointer.Body() == bodyLeftInfo.body)
+            {
+                Destroy(handPointer.gameObject);
+            }
+        }
+    }
+
     // Update the body data to match the frame
     private void UpdateBodyData(Kinect.BodyFrame frame)
     {
@@ -152,6 +219,8 @@ public class BodyTracker : MonoBehaviour
             frame.Dispose();
             frame = null;
             UpdateTrackedIds();
+
+            activeControllerBody = NearestBody();
         }
     }
 
@@ -167,7 +236,7 @@ public class BodyTracker : MonoBehaviour
             if (body == null || !body.IsTracked || System.Array.IndexOf(bodyData, body) == -1)
             {
                 // A body has left - Call the event and mark the id for removal
-                BodyLeft(this, new BodyLeftEventArgs(id));
+                BodyLeft(this, new BodyLeftEventArgs(body));
                 untrackedIds[i++] = id;
             }
         }
@@ -189,7 +258,7 @@ public class BodyTracker : MonoBehaviour
             if (body != null && body.IsTracked && !trackedBodies.ContainsKey(body.TrackingId))
             {
                 // A body has entered - Call the event and add the id and body to trackedIds.
-                BodyEntered(this, new BodyEnteredEventArgs(body.TrackingId));
+                BodyEntered(this, new BodyEnteredEventArgs(body));
                 trackedBodies.Add(body.TrackingId, body);
             }
         }
@@ -247,20 +316,4 @@ public class BodyTracker : MonoBehaviour
         return new Vector3(cameraSpacePoint.X, cameraSpacePoint.Y, cameraSpacePoint.Z);
     }
 
-    // Map a joint's CameraSpacePoint to 2D space with values ranging from 0 to 1
-    public Vector2 JointPositionOnScreen(Kinect.Body body, Kinect.JointType jointType)
-    {
-        Vector2 pointOnScreen = Vector2.zero;
-        if (body != null && body.IsTracked)
-        {
-            Kinect.Joint joint = body.Joints[jointType];
-            if (joint.TrackingState == Kinect.TrackingState.Tracked)
-            {
-                Kinect.ColorSpacePoint point = kinectSensor.CoordinateMapper.MapCameraPointToColorSpace(joint.Position);
-                // The Kinect V2's color view's resolution is 1920x1080
-                pointOnScreen = new Vector2(point.X / 1920f, point.Y / 1080f);
-            }
-        }
-        return pointOnScreen;
-    }
 }

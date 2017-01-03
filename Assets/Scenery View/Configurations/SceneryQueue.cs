@@ -12,9 +12,10 @@ public class SceneryQueue : MonoBehaviour
     private int currentSceneryIndex;
     private GameObject currentSceneryObject = null;
     private bool currentlyChangingScenery = false;
-
-    private Configurations configurations;
+    
     private string[] sceneryQueue;
+
+    private BodyTracker bodyTracker;
 
     void Start()
     {
@@ -23,25 +24,29 @@ public class SceneryQueue : MonoBehaviour
         {
             // Load configurations from the path given as a command line argument
             Configurations configs = Configurations.Load(args[1]);
+            Configurations.SetInstance(Configurations.Load(args[1]));
 
-            if (configs != null)
+            if (Configurations.Instance() != null)
             {
-                BeginQueue(configs);
+                BeginQueue();
             }
         }
+
+        bodyTracker = FindObjectOfType<BodyTracker>();
     }
 
     void Update()
     {
-        if (configurations != null)
+        Configurations configs = Configurations.Instance();
+        if (configs != null)
         {
-            if (configurations.sceneries.Length > 1)
+            if (configs.sceneries.Length > 1)
             {
                 // Advance in queue if enough time has passed
-                if (configurations.sceneryChangeInterval > 0)
+                if (configs.sceneryChangeInterval > 0)
                 {
                     DateTime currentTime = DateTime.Now;
-                    if (currentTime >= previousSceneryLoadTime.AddSeconds(configurations.sceneryChangeInterval))
+                    if (currentTime >= previousSceneryLoadTime.AddSeconds(configs.sceneryChangeInterval))
                     {
                         previousSceneryLoadTime = currentTime;
                         StartCoroutine("NextScenery");
@@ -58,14 +63,14 @@ public class SceneryQueue : MonoBehaviour
     }
 
     // Begin the queue by initializing whatever's needed from the configurations and creating the first scenery in queue
-    public void BeginQueue(Configurations configurations)
+    public void BeginQueue()
     {
-        this.configurations = configurations;
-        if (configurations != null && sceneryPrefab != null)
+        Configurations configs = Configurations.Instance();
+        if (configs != null && sceneryPrefab != null)
         {
             // Initialize a copy of the scenery queue (a copy so that it can be shuffled if needed)
-            sceneryQueue = new string[configurations.sceneries.Length];
-            configurations.sceneries.CopyTo(sceneryQueue, 0);
+            sceneryQueue = new string[configs.sceneries.Length];
+            configs.sceneries.CopyTo(sceneryQueue, 0);
 
             // Start the queue from the beginning
             currentSceneryIndex = -1;
@@ -77,6 +82,7 @@ public class SceneryQueue : MonoBehaviour
     // Go to the next scenery in queue
     IEnumerator NextScenery()
     {
+        Configurations configs = Configurations.Instance();
         if (!currentlyChangingScenery)
         {
             currentlyChangingScenery = true;
@@ -88,8 +94,16 @@ public class SceneryQueue : MonoBehaviour
             }
             if (sceneryTransition != null)
             {
-                sceneryTransition.color = new Color(configurations.transitionColorRed, configurations.transitionColorGreen, configurations.transitionColorBlue);
-                sceneryTransition.duration = configurations.transitionDuration;
+                if (configs != null)
+                {
+                    sceneryTransition.color = new Color(configs.transitionColorRed, configs.transitionColorGreen, configs.transitionColorBlue);
+                    sceneryTransition.duration = configs.transitionDuration;
+                }
+                else
+                {
+                    sceneryTransition.color = Color.black;
+                    sceneryTransition.duration = 1;
+                }
                 while (!sceneryTransition.FadedIn())
                 {
                     yield return null;
@@ -102,8 +116,15 @@ public class SceneryQueue : MonoBehaviour
                 DestroyImmediate(currentSceneryObject);
             }
             // Advance in the queue and shuffle it every time we start at 0
-            currentSceneryIndex = ++currentSceneryIndex % configurations.sceneries.Length;
-            if (currentSceneryIndex == 0 && configurations.shuffleSceneries)
+            int index = 0;
+            bool shuffle = false;
+            if (configs != null)
+            {
+                index = ++currentSceneryIndex % configs.sceneries.Length;
+                shuffle = configs.shuffleSceneries;
+            }
+            currentSceneryIndex = index;
+            if (currentSceneryIndex == 0 && shuffle)
             {
                 sceneryQueue = ShuffledSceneries(sceneryQueue, new System.Random());
             }
@@ -128,7 +149,6 @@ public class SceneryQueue : MonoBehaviour
             Scenery scenery = sceneryObject.GetComponent<Scenery>();
             if (scenery != null)
             {
-                scenery.SetConfigurations(configurations);
                 scenery.LoadScenery(sceneryQueue[sceneryIndex]);
             }
             return sceneryObject;

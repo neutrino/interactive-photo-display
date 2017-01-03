@@ -33,7 +33,6 @@ public class Scenery : MonoBehaviour, SceneryObject
 
     private MovableSceneryObject[] movableSceneryObjects = new MovableSceneryObject[0];
     private string filePath;
-    private Configurations configurations;
 
     private Vector3 previousMousePosition;
 
@@ -58,18 +57,23 @@ public class Scenery : MonoBehaviour, SceneryObject
     {
         movableSceneryObjects = GetComponentsInChildren<MovableSceneryObject>();
     }
-
+    
     void Update()
     {
-        if (configurations != null)
+        Configurations configs = Configurations.Instance();
+        if (configs != null)
         {
             // Get Kinect input
-            if (configurations.useKinectInput && bodyTracker != null)
+            if (configs.useKinectInput && bodyTracker != null)
             {
-                Vector3 position = configurations.KinectOffset();
-                position += BodyTracker.BodyPosition(bodyTracker.NearestBody());
-                position = Vector3.Scale(position, configurations.KinectMultiplier());
-                movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * configurations.kinectSmoothing);
+                Kinect.Body body = bodyTracker.ActiveControllerBody();
+                Vector3 position = configs.KinectOffset();
+                if (body != null)
+                {
+                    position += BodyTracker.BodyPosition(body);
+                }
+                position = Vector3.Scale(position, configs.KinectMultiplier());
+                movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * configs.kinectSmoothing);
             }
             // Get mouse input
             else if (Input.GetMouseButton(0))
@@ -89,7 +93,7 @@ public class Scenery : MonoBehaviour, SceneryObject
                 TransformMovableSceneryObjects(fixedMovementInput);
             }
 
-            if (!configurations.useKinectInput)
+            if (!configs.useKinectInput)
             {
                 movementInput = fixedMovementInput;
             }
@@ -228,11 +232,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         }
         return 0;
     }
-
-    public void SetConfigurations(Configurations configurations)
-    {
-        this.configurations = configurations;
-    }
+    
     public string FilePath()
     {
         return filePath;
