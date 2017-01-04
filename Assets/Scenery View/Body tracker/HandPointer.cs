@@ -15,6 +15,7 @@ public class HandPointer : MonoBehaviour
     public Texture textureHandClosed;
 
     private Kinect.Body body;
+    private ulong bodyTrackingId;
     private BodyTracker bodyTracker;
     private Side side;
 
@@ -153,12 +154,17 @@ public class HandPointer : MonoBehaviour
     public void LinkToBody(Kinect.Body body, Side side)
     {
         this.body = body;
+        this.bodyTrackingId = body.TrackingId;
         this.side = side;
     }
 
     public Kinect.Body Body()
     {
         return body;
+    }
+    public ulong BodyTrackingId()
+    {
+        return bodyTrackingId;
     }
 
     // Returns the hand's position as mapped to screen coordinates in pixels.
