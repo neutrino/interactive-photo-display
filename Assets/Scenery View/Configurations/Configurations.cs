@@ -24,6 +24,10 @@ public class Configurations
     public bool multipleHandUsers = true;
     public float handActivationTime = 1;
     public float handDeactivationTime = 1;
+    public int OscUserLocationUpdatesPerSecond = 5;
+    public string OscOutputIP = "127.0.0.1";
+    public int OscOutputPort = 57120;
+    public int OscInputPort = 57122;
     public int sceneryChangeInterval = 0;
     public bool shuffleSceneries = false;
     public string[] sceneries;
