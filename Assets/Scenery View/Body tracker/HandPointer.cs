@@ -102,7 +102,6 @@ public class HandPointer : MonoBehaviour
                 Vector2 screenPosition = PositionOnScreen();
                 foreach (SceneryPopUp popup in FindObjectsOfType<SceneryPopUp>())
                 {
-                    Vector2 popupScreenPosition = Camera.main.WorldToScreenPoint(popup.transform.position);
                     if (popup.ScreenPointCloseEnough(screenPosition))
                     {
                         popup.ToggleVisibility();

@@ -39,10 +39,7 @@ public class SceneryQueue : MonoBehaviour
         if (args.Length >= 2)
         {
             // Load configurations from the path given as a command line argument
-            Configurations configs = Configurations.Load(args[1]);
-            Configurations.SetInstance(Configurations.Load(args[1]));
-
-            if (Configurations.Instance() != null)
+            if (Configurations.Load(args[1]) != null)
             {
                 BeginQueue();
             }
@@ -124,7 +121,7 @@ public class SceneryQueue : MonoBehaviour
             {
                 if (configs != null)
                 {
-                    sceneryTransition.color = new Color(configs.transitionColorRed, configs.transitionColorGreen, configs.transitionColorBlue);
+                    sceneryTransition.color = configs.transitionColor;
                     sceneryTransition.duration = configs.transitionDuration;
                 }
                 else
