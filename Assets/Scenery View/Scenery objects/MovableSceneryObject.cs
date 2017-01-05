@@ -4,8 +4,9 @@ using System.Collections;
 [System.Serializable]
 public class MovableSceneryObjectData : SceneryObjectData
 {
-    public float x, y, z;
-    public float rotation;
+    public Vector3 position = Vector3.zero;
+    public Vector3 scale = Vector3.one;
+    public float rotation = 0;
 }
 
 public class MovableSceneryObject : MonoBehaviour, SceneryObject
@@ -62,16 +63,18 @@ public class MovableSceneryObject : MonoBehaviour, SceneryObject
     public SceneryObjectData GetData()
     {
         MovableSceneryObjectData data = new MovableSceneryObjectData();
-        data.x = transform.position.x;
-        data.y = transform.position.y;
-        data.z = transform.position.z;
+        data.position = transform.position;
+        data.scale = transform.localScale;
         data.rotation = transform.rotation.eulerAngles.z;
         return data;
     }
     public void SetData(SceneryObjectData sceneryObjectData)
     {
         MovableSceneryObjectData data = (MovableSceneryObjectData)sceneryObjectData;
-        transform.position = new Vector3(data.x, data.y, data.z);
+        transform.position = data.position;
+        transform.localScale = data.scale;
+        startingPosition = data.position;
+        startingScale = data.scale;
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, data.rotation);
     }
 

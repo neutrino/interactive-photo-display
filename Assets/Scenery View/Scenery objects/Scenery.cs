@@ -7,9 +7,9 @@ using Kinect = Windows.Kinect;
 public class SceneryData : SceneryObjectData
 {
     public int cameraHeight = 720;
-    public SceneryImageData[] images;
-    public SceneryTextData[] texts;
-    public SceneryPopUpData[] popUps;
+    public SceneryImageData[] images = new SceneryImageData[0];
+    public SceneryTextData[] texts = new SceneryTextData[0];
+    public SceneryPopUpData[] popUps = new SceneryPopUpData[0];
 }
 
 
@@ -67,12 +67,12 @@ public class Scenery : MonoBehaviour, SceneryObject
             if (configs.useKinectInput && bodyTracker != null)
             {
                 Kinect.Body body = bodyTracker.ActiveControllerBody();
-                Vector3 position = configs.KinectOffset();
+                Vector3 position = configs.kinectOffset;
                 if (body != null)
                 {
-                    position += BodyTracker.BodyPosition(body);
+                    position += -BodyTracker.BodyPosition(body);
                 }
-                position = Vector3.Scale(position, configs.KinectMultiplier());
+                position = Vector3.Scale(position, configs.kinectMultiplier);
                 movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * configs.kinectSmoothing);
             }
             // Get mouse input
@@ -305,7 +305,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         Camera cam = Camera.main;
         if (cam != null)
         {
-            cam.orthographicSize = sceneryData.cameraHeight / cameraPixelsPerUnits;
+            cam.orthographicSize = (float)sceneryData.cameraHeight / (float)cameraPixelsPerUnits;
         }
         
         // First destroy any currently contained scenery objects

@@ -7,15 +7,15 @@ using System.IO;
 [System.Serializable]
 public class SceneryImageData : SceneryObjectData
 {
-    public MovableSceneryObjectData movableSceneryObjectData;
-    public AnimatedSceneryObjectData animatedSceneryObjectData;
-    public string fileName;
-    public bool restrictHorizontalMovement;
-    public bool restrictVerticalMovement;
-    public float transparencyRed;
-    public float transparencyGreen;
-    public float transparencyBlue;
-    public float transparencyThreshold;
+    public MovableSceneryObjectData transform;
+    public AnimatedSceneryObjectData animation;
+    public string fileName = "";
+    public bool restrictHorizontalMovement = false;
+    public bool restrictVerticalMovement = false;
+    public float transparencyRed = 0;
+    public float transparencyGreen = 0;
+    public float transparencyBlue = 0;
+    public float transparencyThreshold = 0;
 }
 
 
@@ -232,8 +232,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
     {
         // Generate a SceneryImageData with current state's information
         SceneryImageData sceneryImageData = new SceneryImageData();
-        sceneryImageData.movableSceneryObjectData = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
-        sceneryImageData.animatedSceneryObjectData = (AnimatedSceneryObjectData)GetComponent<AnimatedSceneryObject>().GetData();
+        sceneryImageData.transform = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
+        sceneryImageData.animation = (AnimatedSceneryObjectData)GetComponent<AnimatedSceneryObject>().GetData();
         sceneryImageData.fileName = fileName;
         sceneryImageData.restrictHorizontalMovement = restrictHorizontalMovement;
         sceneryImageData.restrictVerticalMovement = restrictVerticalMovement;
@@ -249,8 +249,8 @@ public class SceneryImage : MonoBehaviour, SceneryObject
     {
         // Modify current state to match the given data's information
         SceneryImageData sceneryImageData = (SceneryImageData)sceneryObjectData;
-        GetComponent<MovableSceneryObject>().SetData(sceneryImageData.movableSceneryObjectData);
-        GetComponent<AnimatedSceneryObject>().SetData(sceneryImageData.animatedSceneryObjectData);
+        GetComponent<MovableSceneryObject>().SetData(sceneryImageData.transform);
+        GetComponent<AnimatedSceneryObject>().SetData(sceneryImageData.animation);
         fileName = sceneryImageData.fileName;
         restrictHorizontalMovement = sceneryImageData.restrictHorizontalMovement;
         restrictVerticalMovement = sceneryImageData.restrictVerticalMovement;

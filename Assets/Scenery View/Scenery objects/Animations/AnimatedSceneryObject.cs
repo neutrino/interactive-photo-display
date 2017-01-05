@@ -6,10 +6,10 @@ using System;
 [System.Serializable]
 public class AnimatedSceneryObjectData : SceneryObjectData
 {
-    public float horizontalAnimationSpeed;
-    public float horizontalAnimationMagnitude;
-    public float verticalAnimationSpeed;
-    public float verticalAnimationMagnitude;
+    public float horizontalAnimationSpeed = 0;
+    public float horizontalAnimationMagnitude = 0;
+    public float verticalAnimationSpeed = 0;
+    public float verticalAnimationMagnitude = 0;
 }
 
 public class AnimatedSceneryObject : MonoBehaviour, SceneryObject
