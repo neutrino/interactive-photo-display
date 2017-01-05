@@ -15,10 +15,10 @@ public class BodyTracker : MonoBehaviour
     }
     public class BodyLeftEventArgs : System.EventArgs
     {
-        public Kinect.Body body;
-        public BodyLeftEventArgs(Kinect.Body body)
+        public ulong bodyTrackingId;
+        public BodyLeftEventArgs(ulong bodyTrackingId)
         {
-            this.body = body;
+            this.bodyTrackingId = bodyTrackingId;
         }
     }
 
@@ -99,7 +99,7 @@ public class BodyTracker : MonoBehaviour
     }
 
 
-    // Map a joint's CameraSpacePoint to 2D space with values ranging from 0 to 1 (Could this be a static method?)
+    // Map a joint's CameraSpacePoint to 2D space with values ranging from 0 to 1
     public Vector2 JointPositionOnScreen(Kinect.Body body, Kinect.JointType jointType)
     {
         Vector2 pointOnScreen = Vector2.zero;
@@ -108,12 +108,21 @@ public class BodyTracker : MonoBehaviour
             Kinect.Joint joint = body.Joints[jointType];
             if (joint.TrackingState == Kinect.TrackingState.Tracked)
             {
+                pointOnScreen = PositionOnScreen(joint.Position);
+                /*
                 Kinect.ColorSpacePoint point = kinectSensor.CoordinateMapper.MapCameraPointToColorSpace(joint.Position);
                 // The Kinect V2's color view's resolution is 1920x1080
                 pointOnScreen = new Vector2(point.X / 1920f, point.Y / 1080f);
+                */
             }
         }
         return pointOnScreen;
+    }
+    // Map a CameraSpacePoint to 2D space with values ranging from 0 to 1
+    public Vector2 PositionOnScreen(Kinect.CameraSpacePoint position)
+    {
+        Kinect.ColorSpacePoint screenPoint = kinectSensor.CoordinateMapper.MapCameraPointToColorSpace(position);
+        return new Vector2(screenPoint.X / 1920f, screenPoint.Y / 1080f);
     }
 
 
@@ -195,10 +204,10 @@ public class BodyTracker : MonoBehaviour
     // Handler for BodyLeft event
     private void BodyTracker_BodyLeft(object bodyTracker, BodyLeftEventArgs bodyLeftInfo)
     {
-        Debug.Log("Body " + bodyLeftInfo.body.TrackingId + " has left.");
+        Debug.Log("Body " + bodyLeftInfo.bodyTrackingId + " has left.");
         foreach (HandPointer handPointer in FindObjectsOfType<HandPointer>())
         {
-            if (handPointer.Body() == bodyLeftInfo.body)
+            if (handPointer.BodyTrackingId() == bodyLeftInfo.bodyTrackingId)
             {
                 Destroy(handPointer.gameObject);
             }
@@ -236,7 +245,10 @@ public class BodyTracker : MonoBehaviour
             if (body == null || !body.IsTracked || System.Array.IndexOf(bodyData, body) == -1)
             {
                 // A body has left - Call the event and mark the id for removal
-                BodyLeft(this, new BodyLeftEventArgs(body));
+                if (BodyLeft != null)
+                {
+                    BodyLeft(this, new BodyLeftEventArgs(id));
+                }
                 untrackedIds[i++] = id;
             }
         }
@@ -258,7 +270,10 @@ public class BodyTracker : MonoBehaviour
             if (body != null && body.IsTracked && !trackedBodies.ContainsKey(body.TrackingId))
             {
                 // A body has entered - Call the event and add the id and body to trackedIds.
-                BodyEntered(this, new BodyEnteredEventArgs(body));
+                if (BodyEntered != null)
+                {
+                    BodyEntered(this, new BodyEnteredEventArgs(body));
+                }
                 trackedBodies.Add(body.TrackingId, body);
             }
         }
@@ -311,9 +326,18 @@ public class BodyTracker : MonoBehaviour
     }
 
     // Convert CameraSpacePoint to a Vector3
-    public static Vector3 CameraSpacePointToVector3(Kinect.CameraSpacePoint cameraSpacePoint)
+    public static Vector3 CameraSpacePointToVector3(Kinect.CameraSpacePoint position)
     {
-        return new Vector3(cameraSpacePoint.X, cameraSpacePoint.Y, cameraSpacePoint.Z);
+        return new Vector3(position.X, position.Y, position.Z);
+    }
+    // Convert Vector3 to a CameraSpacePoint
+    public static Kinect.CameraSpacePoint Vector3ToCameraSpacePoint(Vector3 position)
+    {
+        Kinect.CameraSpacePoint point = new Kinect.CameraSpacePoint();
+        point.X = position.x;
+        point.Y = position.y;
+        point.Z = position.z;
+        return point;
     }
 
 }
