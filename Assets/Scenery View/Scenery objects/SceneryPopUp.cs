@@ -29,6 +29,19 @@ public class SceneryPopUpData : SceneryObjectData
 [RequireComponent(typeof(MovableSceneryObject))]
 public class SceneryPopUp : MonoBehaviour, SceneryObject
 {
+    
+    public class PopUpShownEventArgs : System.EventArgs
+    {
+    }
+    public class PopUpHiddenEventArgs : System.EventArgs
+    {
+    }
+
+    public delegate void PopUpShownDelegate(object sceneryPopUp, PopUpShownEventArgs popUpInfo);
+    public static event PopUpShownDelegate PopUpShown;
+    public delegate void PopUpHiddenDelegate(object sceneryPopUp, PopUpHiddenEventArgs popUpInfo);
+    public static event PopUpHiddenDelegate PopUpHidden;
+
     public bool alwaysVisible;
     public float targetScale = 0f;
     public float animationSpeed = 1f;
@@ -76,11 +89,19 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
             {
                 visible = true;
                 targetScale = 1;
+                if (PopUpShown != null)
+                {
+                    PopUpShown(this, new PopUpShownEventArgs());
+                }
             }
             else
             {
                 visible = false;
                 targetScale = 0;
+                if (PopUpHidden != null)
+                {
+                    PopUpHidden(this, new PopUpHiddenEventArgs());
+                }
             }
         }
     }
@@ -115,6 +136,16 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         }
 
         return rect;
+    }
+
+    public string GetText()
+    {
+        Text textComponent = GetComponentInChildren<Text>();
+        if (textComponent != null)
+        {
+            return textComponent.text;
+        }
+        return "";
     }
 
     
