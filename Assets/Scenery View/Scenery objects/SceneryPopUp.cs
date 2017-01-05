@@ -6,20 +6,13 @@ using UnityEngine.UI;
 [System.Serializable]
 public class SceneryPopUpData : SceneryObjectData
 {
-    public MovableSceneryObjectData movableSceneryObjectData;
-    public string text;
-    public int fontSize;
-    public float width;
+    public MovableSceneryObjectData transform;
+    public string text = "";
+    public int fontSize = 8;
+    public float width = 100;
 
-    public float textRed;
-    public float textGreen;
-    public float textBlue;
-    public float textAlpha;
-
-    public float backgroundRed;
-    public float backgroundGreen;
-    public float backgroundBlue;
-    public float backgroundAlpha;
+    public Color textColor = Color.white;
+    public Color backgroundColor = Color.clear;
 
     public bool alwaysVisible;
     public bool alwaysOnTop;
@@ -156,25 +149,19 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
 
         SceneryPopUpData sceneryPopUpData = new SceneryPopUpData();
 
-        sceneryPopUpData.movableSceneryObjectData = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
+        sceneryPopUpData.transform = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
         sceneryPopUpData.alwaysVisible = alwaysVisible;
         Text textComponent = GetComponentInChildren<Text>();
         if (textComponent != null)
         {
             sceneryPopUpData.text = textComponent.text;
             sceneryPopUpData.fontSize = textComponent.fontSize;
-            sceneryPopUpData.textRed = textComponent.color.r;
-            sceneryPopUpData.textGreen = textComponent.color.g;
-            sceneryPopUpData.textBlue = textComponent.color.b;
-            sceneryPopUpData.textAlpha = textComponent.color.a;
+            sceneryPopUpData.textColor = textComponent.color;
         }
 
         if (backgroundImage != null)
         {
-            sceneryPopUpData.backgroundRed = backgroundImage.color.r;
-            sceneryPopUpData.backgroundGreen = backgroundImage.color.g;
-            sceneryPopUpData.backgroundBlue = backgroundImage.color.b;
-            sceneryPopUpData.backgroundAlpha = backgroundImage.color.a;
+            sceneryPopUpData.backgroundColor = backgroundImage.color;
 
             sceneryPopUpData.width = backgroundImageTransform.sizeDelta.x;
         }
@@ -203,7 +190,7 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         // Modify current state to match the given data's information
         SceneryPopUpData sceneryPopUpData = (SceneryPopUpData)sceneryObjectData;
 
-        GetComponent<MovableSceneryObject>().SetData(sceneryPopUpData.movableSceneryObjectData);
+        GetComponent<MovableSceneryObject>().SetData(sceneryPopUpData.transform);
 
         alwaysVisible = sceneryPopUpData.alwaysVisible;
         visible = alwaysVisible;
@@ -217,12 +204,16 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         {
             textComponent.text = sceneryPopUpData.text;
             textComponent.fontSize = sceneryPopUpData.fontSize;
-            textComponent.color = new Color(sceneryPopUpData.textRed, sceneryPopUpData.textGreen, sceneryPopUpData.textBlue, sceneryPopUpData.textAlpha);
+            textComponent.color = sceneryPopUpData.textColor;
         }
 
         if (backgroundImage != null)
         {
-            backgroundImage.color = new Color(sceneryPopUpData.backgroundRed, sceneryPopUpData.backgroundGreen, sceneryPopUpData.backgroundBlue, sceneryPopUpData.backgroundAlpha);
+            Color color = sceneryPopUpData.backgroundColor;
+            // For some reason if the background's alpha is zero, the text in it is invisible.
+            // Force alpha to be just above zero so that the text component is always visible.
+            color.a = Mathf.Max(color.a, (1f / 255f) * 2f);
+            backgroundImage.color = color;
 
             backgroundImageTransform.sizeDelta = new Vector2(sceneryPopUpData.width, 0f);
         }

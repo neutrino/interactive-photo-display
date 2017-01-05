@@ -18,14 +18,13 @@ public class VideoView : MonoBehaviour
     void Awake()
     {
         renderer = GetComponent<Renderer>();
+        Configurations.Loaded += ConfigurationsLoaded;
     }
 
     void Start()
     {
-        // Set the opacity of the material
-        Color color = renderer.sharedMaterial.color;
-        color.a = opacity;
-        renderer.sharedMaterial.color = color;
+        Enable(false);
+        SetOpacity(opacity);
 
         StartKinect();
 
@@ -35,16 +34,63 @@ public class VideoView : MonoBehaviour
             var frameDesc = kinectSensor.ColorFrameSource.CreateFrameDescription(Kinect.ColorImageFormat.Rgba);
             texture = new Texture2D(frameDesc.Width, frameDesc.Height, TextureFormat.RGBA32, false);
             textureData = new byte[frameDesc.BytesPerPixel * frameDesc.LengthInPixels];
+        }
+    }
 
-            // Rescale the transform to match the aspect ratio of the image
-            Vector3 scale = transform.localScale;
-            scale.x = -scale.y * ((float)texture.width / (float)texture.height);
+    void Update()
+    {
+        if (Enabled())
+        {
+            Vector3 scale = Vector3.one;
+            if ((float)Camera.main.pixelWidth / (float)Camera.main.pixelHeight > (float)texture.width / (float)texture.height)
+            {
+                scale.y = Camera.main.orthographicSize * 2f;
+                scale.x = -scale.y * ((float)texture.width / (float)texture.height);
+            }
+            else
+            {
+                scale.x = -(Camera.main.orthographicSize * 2f) * ((float)Camera.main.pixelWidth / (float)Camera.main.pixelHeight);
+                scale.y = -scale.x * ((float)texture.height / (float)texture.width);
+            }
             transform.localScale = scale;
         }
     }
+
     void OnDestroy()
     {
         CloseKinect();
+    }
+
+    public void Enable(bool enable)
+    {
+        MeshRenderer meshRenderer = GetComponentInChildren<MeshRenderer>();
+        if (meshRenderer != null)
+        {
+            meshRenderer.enabled = enable;
+        }
+    }
+    public bool Enabled()
+    {
+        MeshRenderer meshRenderer = GetComponentInChildren<MeshRenderer>();
+        if (meshRenderer != null)
+        {
+            return meshRenderer.enabled;
+        }
+        return false;
+    }
+
+    private void SetOpacity(float opacity)
+    {
+        Color color = renderer.sharedMaterial.color;
+        color.a = opacity;
+        renderer.sharedMaterial.color = color;
+    }
+
+    private void ConfigurationsLoaded(object configurations, Configurations.LoadedEventArgs loadedInfo)
+    {
+        Configurations configs = (Configurations)configurations;
+        Enable(configs.displayCameraFeed);
+        SetOpacity(configs.cameraFeedAlpha);
     }
 
     // Open the sensor and its color frame reader
@@ -86,7 +132,10 @@ public class VideoView : MonoBehaviour
     // Handler for when the color frame reader's frame arrives.
     private void ColorFrameReader_FrameArrived(object sender, Kinect.ColorFrameArrivedEventArgs e)
     {
-        UpdateTexture(e.FrameReference.AcquireFrame());
+        if (Enabled())
+        {
+            UpdateTexture(e.FrameReference.AcquireFrame());
+        }
     }
 
     // Update the texture to the latest frame from the reader
