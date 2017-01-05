@@ -74,7 +74,7 @@
 	void surf(Input IN, inout SurfaceOutput o)
 	{
 		fixed4 c = IN.color;
-		float a = SampleSpriteTexture(IN.uv_MainTex).a;
+		float a = SampleSpriteTexture(IN.uv_MainTex).a * c.a;
 		o.Albedo = c.rgb * a;
 		o.Alpha = a;
 	}
