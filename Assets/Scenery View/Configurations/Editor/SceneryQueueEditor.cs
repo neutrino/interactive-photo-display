@@ -20,10 +20,8 @@ public class SceneryQueueEditor : Editor
         if (GUILayout.Button("Load"))
         {
             SceneryQueue sceneryQueue = (SceneryQueue)target;
-            Configurations configs = Configurations.Load(configurationsPath);
-            if (configs != null)
+            if (Configurations.Load(configurationsPath) != null)
             {
-                Configurations.SetInstance(configs);
                 sceneryQueue.BeginQueue();
             }
         }

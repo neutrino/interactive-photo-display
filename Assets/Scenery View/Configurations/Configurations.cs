@@ -8,18 +8,23 @@ It has static methods for loading from or saving to a .json file.
 [System.Serializable]
 public class Configurations
 {
+    public class LoadedEventArgs : System.EventArgs
+    {
+        public bool successful;
+        public string path;
+        public LoadedEventArgs(bool successful, string path)
+        {
+            this.successful = successful;
+            this.path = path;
+        }
+    }
+
     public bool useKinectInput = true;
-    public float kinectMultiplierX = 1;
-    public float kinectMultiplierY = 1;
-    public float kinectMultiplierZ = 1;
-    public float kinectOffsetX = 0;
-    public float kinectOffsetY = 0;
-    public float kinectOffsetZ = 0;
+    public Vector3 kinectMultiplier = Vector3.one;
+    public Vector3 kinectOffset = Vector3.zero;
     public float kinectSmoothing = 10;
     public float transitionDuration = 3;
-    public float transitionColorRed = 0;
-    public float transitionColorGreen = 0;
-    public float transitionColorBlue = 0;
+    public Color transitionColor = Color.black;
     public bool handAlwaysActive = false;
     public bool multipleHandUsers = true;
     public float handActivationTime = 1;
@@ -28,19 +33,21 @@ public class Configurations
     public string OscOutputIP = "127.0.0.1";
     public int OscOutputPort = 57120;
     public int OscInputPort = 57122;
+    public bool displayCameraFeed = false;
+    public float cameraFeedAlpha = 1;
     public int sceneryChangeInterval = 0;
     public bool shuffleSceneries = false;
     public string[] sceneries;
 
     private static Configurations instance;
 
+    // Event for when configurations are loaded
+    public delegate void LoadedDelegate(object configurations, LoadedEventArgs loadedInfo);
+    public static event LoadedDelegate Loaded;
+
     public static Configurations Instance()
     {
         return instance;
-    }
-    public static void SetInstance(Configurations configurations)
-    {
-        instance = configurations;
     }
 
     // Load and return a Configurations object from a .json file
@@ -56,6 +63,7 @@ public class Configurations
                 try
                 {
                     configurations = JsonUtility.FromJson<Configurations>(json);
+                    instance = configurations;
                 }
                 catch (System.Exception e)
                 {
@@ -71,6 +79,12 @@ public class Configurations
         {
             Debug.Log("Error in loading configurations: File \"" + path + "\" doesn't exist.");
         }
+        // Call the event
+        if (Loaded != null)
+        {
+            Loaded(configurations, new LoadedEventArgs(configurations != null, path));
+        }
+
         return configurations;
     }
     // Save a Configurations object to a .json file
@@ -92,16 +106,5 @@ public class Configurations
         {
             Debug.Log("Error in generating configurations json: \"" + e.Message + "\"");
         }
-    }
-
-    // Return Kinect multiplier variables as a Vector3
-    public Vector3 KinectMultiplier()
-    {
-        return new Vector3(kinectMultiplierX, kinectMultiplierY, kinectMultiplierZ);
-    }
-    // Return Kinect offset variables as a Vector3
-    public Vector3 KinectOffset()
-    {
-        return new Vector3(kinectOffsetX, kinectOffsetY, kinectOffsetZ);
     }
 }

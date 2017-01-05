@@ -6,14 +6,11 @@ using UnityEngine.UI;
 [System.Serializable]
 public class SceneryTextData : SceneryObjectData
 {
-    public MovableSceneryObjectData movableSceneryObjectData;
-    public AnimatedSceneryObjectData animatedSceneryObjectData;
+    public MovableSceneryObjectData transform;
+    public AnimatedSceneryObjectData animation;
     public string text;
     public int fontSize;
-    public float red;
-    public float green;
-    public float blue;
-    public float alpha;
+    public Color color = Color.white;
 }
 
 [RequireComponent(typeof(MovableSceneryObject))]
@@ -28,18 +25,15 @@ public class SceneryText : MonoBehaviour, SceneryObject
         
         SceneryTextData sceneryTextData = new SceneryTextData();
 
-        sceneryTextData.movableSceneryObjectData = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
-        sceneryTextData.animatedSceneryObjectData = (AnimatedSceneryObjectData)GetComponent<AnimatedSceneryObject>().GetData();
+        sceneryTextData.transform = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
+        sceneryTextData.animation = (AnimatedSceneryObjectData)GetComponent<AnimatedSceneryObject>().GetData();
 
         Text textComponent = GetComponentInChildren<Text>();
         if (textComponent != null)
         {
             sceneryTextData.text = textComponent.text;
             sceneryTextData.fontSize = textComponent.fontSize;
-            sceneryTextData.red = textComponent.color.r;
-            sceneryTextData.green = textComponent.color.g;
-            sceneryTextData.blue = textComponent.color.b;
-            sceneryTextData.alpha = textComponent.color.a;
+            sceneryTextData.color = textComponent.color;
         }
 
         return sceneryTextData;
@@ -49,15 +43,15 @@ public class SceneryText : MonoBehaviour, SceneryObject
         // Modify current state to match the given data's information
         SceneryTextData sceneryTextData = (SceneryTextData)sceneryObjectData;
 
-        GetComponent<MovableSceneryObject>().SetData(sceneryTextData.movableSceneryObjectData);
-        GetComponent<AnimatedSceneryObject>().SetData(sceneryTextData.animatedSceneryObjectData);
+        GetComponent<MovableSceneryObject>().SetData(sceneryTextData.transform);
+        GetComponent<AnimatedSceneryObject>().SetData(sceneryTextData.animation);
 
         Text textComponent = GetComponentInChildren<Text>();
         if (textComponent != null)
         {
             textComponent.text = sceneryTextData.text;
             textComponent.fontSize = sceneryTextData.fontSize;
-            textComponent.color = new Color(sceneryTextData.red, sceneryTextData.green, sceneryTextData.blue, sceneryTextData.alpha);
+            textComponent.color = sceneryTextData.color;
         }
     }
 }
