@@ -94,16 +94,20 @@ public class HandPointer : MonoBehaviour
             }
         }
 
-        // When active and the hand has been closed, toggle any pop-up message's visibility that's located at the hand's position on screen
+        // When active, refresh visibility timers, and if the hand has been closed, toggle any pop-up message's visibility that's located at the hand's position on screen
         if (active)
         {
-            if ((previousKnownHandState == Kinect.HandState.Open || previousKnownHandState == Kinect.HandState.Lasso) && HandState() == Kinect.HandState.Closed)
+            Vector2 screenPosition = PositionOnScreen();
+            foreach (SceneryPopUp popup in FindObjectsOfType<SceneryPopUp>())
             {
-                Vector2 screenPosition = PositionOnScreen();
-                foreach (SceneryPopUp popup in FindObjectsOfType<SceneryPopUp>())
+                if (popup.ScreenPointCloseEnough(screenPosition))
                 {
-                    if (popup.ScreenPointCloseEnough(screenPosition))
+                    // Reset timer
+                    popup.ResetTimer();
+
+                    if ((previousKnownHandState == Kinect.HandState.Open || previousKnownHandState == Kinect.HandState.Lasso) && HandState() == Kinect.HandState.Closed)
                     {
+                        // Toggle visibility
                         popup.ToggleVisibility();
                     }
                 }
