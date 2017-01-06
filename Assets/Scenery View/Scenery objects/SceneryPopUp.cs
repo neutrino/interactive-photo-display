@@ -8,6 +8,7 @@ public class SceneryPopUpData : SceneryObjectData
 {
     public MovableSceneryObjectData transform;
     public string text = "";
+    public string font = "";
     public int fontSize = 8;
     public float width = 100;
     public float autoHideDelay;
@@ -225,6 +226,10 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         Text textComponent = GetComponentInChildren<Text>();
         if (textComponent != null)
         {
+            if (sceneryPopUpData.font != "")
+            {
+                textComponent.font = Font.CreateDynamicFontFromOSFont(sceneryPopUpData.font, sceneryPopUpData.fontSize);
+            }
             textComponent.text = sceneryPopUpData.text;
             textComponent.fontSize = sceneryPopUpData.fontSize;
             textComponent.color = sceneryPopUpData.textColor;
