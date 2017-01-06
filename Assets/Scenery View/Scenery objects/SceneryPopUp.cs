@@ -10,6 +10,7 @@ public class SceneryPopUpData : SceneryObjectData
     public string text = "";
     public int fontSize = 8;
     public float width = 100;
+    public float autoHideDelay;
 
     public Color textColor = Color.white;
     public Color backgroundColor = Color.clear;
@@ -39,11 +40,12 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
     public float targetScale = 0f;
     public float animationSpeed = 1f;
     public float handOnIconMaxDistance = 50.0f;
+    public float autoHideDelay;
 
     public Texture iconTexture;
 
     private bool visible;
-
+    private float autoHideTimer;
     private MovableSceneryObject movableSceneryObject;
     private Image backgroundImage;
     private RectTransform backgroundImageTransform;
@@ -67,11 +69,28 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
             scale.y += (targetScale - scale.y) * Time.deltaTime * animationSpeed;
             backgroundImageTransform.localScale = scale;
         }
+
+        // Automatically turn invisible after a while
+        if (visible && autoHideDelay > 0)
+        {
+            autoHideTimer += Time.deltaTime;
+
+            if (autoHideTimer >= autoHideDelay)
+            {
+                autoHideTimer = 0;
+                SetVisibility(false);
+            }
+        }
     }
 
     public void ToggleVisibility()
     {
         SetVisibility(!visible);
+    }
+
+    public void ResetTimer()
+    {
+        autoHideTimer = 0;
     }
 
     public void SetVisibility(bool isVisible)
@@ -151,6 +170,8 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
 
         sceneryPopUpData.transform = (MovableSceneryObjectData)GetComponent<MovableSceneryObject>().GetData();
         sceneryPopUpData.alwaysVisible = alwaysVisible;
+        sceneryPopUpData.autoHideDelay = autoHideDelay;
+
         Text textComponent = GetComponentInChildren<Text>();
         if (textComponent != null)
         {
@@ -194,6 +215,8 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
 
         alwaysVisible = sceneryPopUpData.alwaysVisible;
         visible = alwaysVisible;
+        autoHideDelay = sceneryPopUpData.autoHideDelay;
+
         if (alwaysVisible)
         {
             targetScale = 1;

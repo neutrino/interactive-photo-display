@@ -20,7 +20,6 @@ GameObject:
   m_Component:
   - 4: {fileID: 4000014268017768}
   - 114: {fileID: 114000014109216078}
-  - 114: {fileID: 114000012254234216}
   m_Layer: 0
   m_Name: Body Tracker
   m_TagString: Untagged
@@ -41,18 +40,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
---- !u!114 &114000012254234216
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012368183020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f52c12ec07ca5eb4ea81ffb6be92e136, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bodyTracker: {fileID: 114000014109216078}
 --- !u!114 &114000014109216078
 MonoBehaviour:
   m_ObjectHideFlags: 1
