@@ -11,7 +11,6 @@ public class SceneryPopUpData : SceneryObjectData
     public int fontSize = 8;
     public float width = 100;
     public float autoHideDelay;
-    public float autoHideSmoothTransitionDuration;
 
     public Color textColor = Color.white;
     public Color backgroundColor = Color.clear;
@@ -42,13 +41,11 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
     public float animationSpeed = 1f;
     public float handOnIconMaxDistance = 50.0f;
     public float autoHideDelay;
-    public float autoHideTimer;
-
 
     public Texture iconTexture;
 
     private bool visible;
-
+    private float autoHideTimer;
     private MovableSceneryObject movableSceneryObject;
     private Image backgroundImage;
     private RectTransform backgroundImageTransform;
