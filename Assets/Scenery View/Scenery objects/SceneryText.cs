@@ -8,8 +8,9 @@ public class SceneryTextData : SceneryObjectData
 {
     public MovableSceneryObjectData transform;
     public AnimatedSceneryObjectData animation;
-    public string text;
-    public int fontSize;
+    public string text = "";
+    public string font = "";
+    public int fontSize = 8;
     public Color color = Color.white;
 }
 
@@ -49,6 +50,10 @@ public class SceneryText : MonoBehaviour, SceneryObject
         Text textComponent = GetComponentInChildren<Text>();
         if (textComponent != null)
         {
+            if (sceneryTextData.font != "")
+            {
+                textComponent.font = Font.CreateDynamicFontFromOSFont(sceneryTextData.font, sceneryTextData.fontSize);
+            }
             textComponent.text = sceneryTextData.text;
             textComponent.fontSize = sceneryTextData.fontSize;
             textComponent.color = sceneryTextData.color;
