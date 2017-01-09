@@ -161,7 +161,12 @@ MonoBehaviour:
   alwaysVisible: 0
   targetScale: 0
   animationSpeed: 8
+  handOnIconMaxDistance: 50
+  autoHideDelay: 0
   iconTexture: {fileID: 2800000, guid: c46e725c60dee2341a4aa480df23438d, type: 3}
+  iconScale: 0.5
+  iconAnimationScale: 0.1
+  iconAnimationSpeed: 0.5
 --- !u!114 &114000010739790938
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -52,5 +52,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   popupActivationDistance: 100
-  textureHandOpen: {fileID: 2800000, guid: afcddb24fc2efd145a66ffc22b59ea81, type: 3}
-  textureHandClosed: {fileID: 2800000, guid: afcddb24fc2efd145a66ffc22b59ea81, type: 3}
+  textureHandOpen: {fileID: 2800000, guid: 0e449164d6bcd414ba1778733c90e1b6, type: 3}
+  textureHandClosed: {fileID: 2800000, guid: 1caef7a511934b94c859049a7ff196ac, type: 3}
+  handTextureScale: 0.25
+  movementSmoothing: 20

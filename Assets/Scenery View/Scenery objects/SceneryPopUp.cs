@@ -44,7 +44,12 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
     public float autoHideDelay;
 
     public Texture iconTexture;
+    public float iconScale = 1;
+    public float iconAnimationScale = 0.1f;
+    public float iconAnimationSpeed = 1;
 
+    private bool handOnIcon = false;
+    private float animatedIconScale;
     private bool visible;
     private float autoHideTimer;
     private MovableSceneryObject movableSceneryObject;
@@ -59,6 +64,11 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         {
             backgroundImageTransform = backgroundImage.GetComponent<RectTransform>();
         }
+    }
+
+    void Start()
+    {
+        animatedIconScale = iconScale;
     }
 
     void Update()
@@ -82,6 +92,23 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
                 SetVisibility(false);
             }
         }
+    }
+
+    void LateUpdate()
+    {
+        float targetScale = iconScale;
+        if (handOnIcon && !visible)
+        {
+            targetScale = iconScale + iconAnimationScale;
+            handOnIcon = false;
+        }
+        animatedIconScale += (targetScale - animatedIconScale) * Time.deltaTime * 10;
+        //animatedIconScale = iconScale + iconAnimationScale * Mathf.Sin((Time.time * iconAnimationSpeed % 1f) * (2 * Mathf.PI));
+    }
+
+    public void HandOnIcon()
+    {
+        handOnIcon = true;
     }
 
     public void ToggleVisibility()
@@ -265,10 +292,10 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
     {
         if (iconTexture != null && !visible)
         {
+            GUI.depth = 2;
             Vector2 center = RectangleOnScreen().center;
-            Vector2 textureSize = new Vector2(iconTexture.width, iconTexture.height) * 0.5f;
-            Vector2 point = new Vector2(center.x - textureSize.x / 2.0f, center.y - textureSize.y / 2.0f);
-            
+            Vector2 textureSize = new Vector2((float)iconTexture.width, (float)iconTexture.height) * animatedIconScale;
+            Vector2 point = new Vector2(center.x - (float)textureSize.x / 2.0f, center.y - (float)textureSize.y / 2.0f);
             GUI.DrawTexture(new Rect(point, textureSize), iconTexture);
         }
     }

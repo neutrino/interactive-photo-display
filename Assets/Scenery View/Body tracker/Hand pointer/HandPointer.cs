@@ -13,17 +13,21 @@ public class HandPointer : MonoBehaviour
     public float popupActivationDistance;
     public Texture textureHandOpen;
     public Texture textureHandClosed;
+    public float handTextureScale = 1;
+    public float movementSmoothing = 10;
 
     private Kinect.Body body;
     private ulong bodyTrackingId;
     private BodyTracker bodyTracker;
     private Side side;
+    private Vector2 positionOnScreen;
 
     private bool active = false;
     private bool keptUp = false;
     private float activationTimer = 0;
 
-    private Kinect.HandState previousKnownHandState = Kinect.HandState.NotTracked;
+    private Kinect.HandState latestValidHandState = Kinect.HandState.Open;
+    private Kinect.HandState previousValidHandState = Kinect.HandState.Open;
 
     void Start()
     {
@@ -32,6 +36,18 @@ public class HandPointer : MonoBehaviour
 
     void Update()
     {
+        Kinect.HandState hs = HandState();
+        if (hs == Kinect.HandState.Open || hs == Kinect.HandState.Closed || hs == Kinect.HandState.Lasso)
+        {
+            latestValidHandState = hs;
+        }
+
+        Vector2 targetPosition = TargetPositionOnScreen();
+        if (targetPosition != Vector2.zero)
+        {
+            positionOnScreen += (TargetPositionOnScreen() - positionOnScreen) * Time.deltaTime * movementSmoothing;
+        }
+
         Configurations configs = Configurations.Instance();
 
         float activationTime = 1.0f;
@@ -105,7 +121,9 @@ public class HandPointer : MonoBehaviour
                     // Reset timer
                     popup.ResetTimer();
 
-                    if ((previousKnownHandState == Kinect.HandState.Open || previousKnownHandState == Kinect.HandState.Lasso) && HandState() == Kinect.HandState.Closed)
+                    popup.HandOnIcon();
+
+                    if (previousValidHandState == Kinect.HandState.Open && (latestValidHandState == Kinect.HandState.Closed || latestValidHandState == Kinect.HandState.Lasso))
                     {
                         // Toggle visibility
                         popup.ToggleVisibility();
@@ -114,11 +132,7 @@ public class HandPointer : MonoBehaviour
             }
         }
 
-        Kinect.HandState hs = HandState();
-        if (hs != Kinect.HandState.Unknown)
-        {
-            previousKnownHandState = hs;
-        }
+        previousValidHandState = latestValidHandState;
     }
 
     public Kinect.Joint Joint()
@@ -153,6 +167,10 @@ public class HandPointer : MonoBehaviour
         }
         return Kinect.HandState.Unknown;
     }
+    public Kinect.HandState LastValidHandState()
+    {
+        return latestValidHandState;
+    }
 
     public void LinkToBody(Kinect.Body body, Side side)
     {
@@ -170,8 +188,12 @@ public class HandPointer : MonoBehaviour
         return bodyTrackingId;
     }
 
-    // Returns the hand's position as mapped to screen coordinates in pixels.
     public Vector2 PositionOnScreen()
+    {
+        return positionOnScreen;
+    }
+        
+    public Vector2 TargetPositionOnScreen()
     {
         Vector2 screenPosition = Vector2.zero;
         if (body != null && bodyTracker != null)
@@ -206,34 +228,25 @@ public class HandPointer : MonoBehaviour
     void OnGUI()
     {
         // Draw a texture over the hand's position.
-        // Change color according to hand state. (temporary?)
         if (active)
         {
-            Vector2 textureSize = new Vector2(textureHandOpen.width, textureHandOpen.height);
-            Rect position = new Rect(PositionOnScreen() - textureSize / 2.0f, textureSize);
-            switch (HandState())
+            Vector2 textureSize = new Vector2(textureHandOpen.width, textureHandOpen.height) * handTextureScale;
+            if (side == Side.Right)
             {
-                case Kinect.HandState.Open:
-                    if (textureHandOpen != null)
-                    {
-                        GUI.color = Color.blue;
+                textureSize.x *= -1;
+            }
+            Rect position = new Rect(PositionOnScreen() - textureSize / 2.0f, textureSize);
+            if (textureHandClosed != null && textureHandOpen != null)
+            {
+                switch (latestValidHandState)
+                {
+                    case Kinect.HandState.Open:
                         GUI.DrawTexture(position, textureHandOpen);
-                    }
-                    break;
-                case Kinect.HandState.Closed:
-                    if (textureHandClosed != null)
-                    {
-                        GUI.color = Color.green;
+                        break;
+                    default:
                         GUI.DrawTexture(position, textureHandClosed);
-                    }
-                    break;
-                default:
-                    if (textureHandClosed != null)
-                    {
-                        GUI.color = Color.red;
-                        GUI.DrawTexture(position, textureHandClosed);
-                    }
-                    break;
+                        break;
+                }
             }
         }
     }
