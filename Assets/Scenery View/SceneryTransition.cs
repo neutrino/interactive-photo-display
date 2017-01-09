@@ -69,6 +69,7 @@ public class SceneryTransition : MonoBehaviour
     {
         if (texture != null && alpha > 0)
         {
+            GUI.depth = -1;
             GUI.color = new Color(color.r, color.g, color.b, alpha);
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), texture);
         }
