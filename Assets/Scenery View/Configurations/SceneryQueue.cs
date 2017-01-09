@@ -24,6 +24,7 @@ public class SceneryQueue : MonoBehaviour
     public GameObject sceneryTransitionPrefab;
     public KeyCode sceneryChangeKey = KeyCode.Space;
 
+    private bool queueStarted = false;
     private System.DateTime previousSceneryLoadTime;
     private int currentSceneryIndex;
     private GameObject currentSceneryObject = null;
@@ -33,43 +34,49 @@ public class SceneryQueue : MonoBehaviour
 
     private BodyTracker bodyTracker;
 
+    void Awake()
+    {
+        Configurations.Loaded += ConfigurationsLoaded;
+    }
+
     void Start()
     {
-        string[] args = System.Environment.GetCommandLineArgs();
-        if (args.Length >= 2)
-        {
-            // Load configurations from the path given as a command line argument
-            if (Configurations.Load(args[1]) != null)
-            {
-                BeginQueue();
-            }
-        }
-
         bodyTracker = FindObjectOfType<BodyTracker>();
+    }
+
+    private void ConfigurationsLoaded(object configurations, Configurations.LoadedEventArgs loadedInfo)
+    {
+        if (loadedInfo.successful && !queueStarted)
+        {
+            BeginQueue();
+        }
     }
 
     void Update()
     {
-        Configurations configs = Configurations.Instance();
-        if (configs != null)
+        if (queueStarted)
         {
-            if (configs.sceneries.Length > 1)
+            Configurations configs = Configurations.Instance();
+            if (configs != null)
             {
-                // Advance in queue if enough time has passed
-                if (configs.sceneryChangeInterval > 0)
+                if (configs.sceneries.Length > 1)
                 {
-                    DateTime currentTime = DateTime.Now;
-                    if (currentTime >= previousSceneryLoadTime.AddSeconds(configs.sceneryChangeInterval))
+                    // Advance in queue if enough time has passed
+                    if (configs.sceneryChangeInterval > 0)
                     {
-                        previousSceneryLoadTime = currentTime;
+                        DateTime currentTime = DateTime.Now;
+                        if (currentTime >= previousSceneryLoadTime.AddSeconds(configs.sceneryChangeInterval))
+                        {
+                            previousSceneryLoadTime = currentTime;
+                            NextScenery();
+                        }
+                    }
+                    // Advance in queue via keyboard input
+                    if (Input.GetKeyDown(sceneryChangeKey))
+                    {
+                        previousSceneryLoadTime = DateTime.Now;
                         NextScenery();
                     }
-                }
-                // Advance in queue via keyboard input
-                if (Input.GetKeyDown(sceneryChangeKey))
-                {
-                    previousSceneryLoadTime = DateTime.Now;
-                    NextScenery();
                 }
             }
         }
@@ -81,6 +88,8 @@ public class SceneryQueue : MonoBehaviour
         Configurations configs = Configurations.Instance();
         if (configs != null && sceneryPrefab != null)
         {
+            queueStarted = true;
+
             // Initialize a copy of the scenery queue (a copy so that it can be shuffled if needed)
             sceneryQueue = new string[configs.sceneries.Length];
             configs.sceneries.CopyTo(sceneryQueue, 0);
@@ -94,105 +103,114 @@ public class SceneryQueue : MonoBehaviour
 
     public IEnumerator ChangeScenery(int sceneryIndex)
     {
-        Configurations configs = Configurations.Instance();
-
-        // Check for scenery index validity
-        bool validSceneryIndex = false;
-        if (configs != null)
+        if (queueStarted)
         {
-            if (sceneryIndex >= 0 && sceneryIndex < configs.sceneries.Length)
-            {
-                currentSceneryIndex = sceneryIndex;
-                validSceneryIndex = true;
-            }
-        }
+            Configurations configs = Configurations.Instance();
 
-        if (!currentlyChangingScenery && validSceneryIndex)
-        {
-            currentlyChangingScenery = true;
-
-            // Start the scenery transition and wait for its completion until moving on to the new scenery
-            SceneryTransition sceneryTransition = null;
-            if (sceneryTransitionPrefab != null)
+            // Check for scenery index validity
+            bool validSceneryIndex = false;
+            if (configs != null)
             {
-                sceneryTransition = Instantiate(sceneryTransitionPrefab).GetComponent<SceneryTransition>();
-            }
-            if (sceneryTransition != null)
-            {
-                if (configs != null)
+                if (sceneryIndex >= 0 && sceneryIndex < configs.sceneries.Length)
                 {
-                    sceneryTransition.color = configs.transitionColor;
-                    sceneryTransition.duration = configs.transitionDuration;
-                }
-                else
-                {
-                    sceneryTransition.color = Color.black;
-                    sceneryTransition.duration = 1;
-                }
-                // Hold the coroutine until the transition is ready
-                while (!sceneryTransition.FadedIn())
-                {
-                    yield return null;
+                    currentSceneryIndex = sceneryIndex;
+                    validSceneryIndex = true;
                 }
             }
 
-            // Destroy the current scenery and create the new one
-            if (currentSceneryObject != null)
+            if (!currentlyChangingScenery && validSceneryIndex)
             {
-                DestroyImmediate(currentSceneryObject);
+                currentlyChangingScenery = true;
+
+                // Start the scenery transition and wait for its completion until moving on to the new scenery
+                SceneryTransition sceneryTransition = null;
+                if (sceneryTransitionPrefab != null)
+                {
+                    sceneryTransition = Instantiate(sceneryTransitionPrefab).GetComponent<SceneryTransition>();
+                }
+                if (sceneryTransition != null)
+                {
+                    if (configs != null)
+                    {
+                        sceneryTransition.color = configs.transitionColor;
+                        sceneryTransition.duration = configs.transitionDuration;
+                    }
+                    else
+                    {
+                        sceneryTransition.color = Color.black;
+                        sceneryTransition.duration = 1;
+                    }
+                    // Hold the coroutine until the transition is ready
+                    while (!sceneryTransition.FadedIn())
+                    {
+                        yield return null;
+                    }
+                }
+
+                // Destroy the current scenery and create the new one
+                if (currentSceneryObject != null)
+                {
+                    DestroyImmediate(currentSceneryObject);
+                }
+                currentSceneryObject = CreateScenery(currentSceneryIndex);
+
+
+                if (sceneryTransition != null)
+                {
+                    sceneryTransition.FadeOut();
+                }
+
+                currentlyChangingScenery = false;
             }
-            currentSceneryObject = CreateScenery(currentSceneryIndex);
-
-
-            if (sceneryTransition != null)
-            {
-                sceneryTransition.FadeOut();
-            }
-
-            currentlyChangingScenery = false;
         }
     }
 
     // Go to the next scenery in queue
     public void NextScenery()
     {
-        Configurations configs = Configurations.Instance();
-
-        // Advance in the queue and shuffle it every time we start at 0
-        int index = 0;
-        bool shuffle = false;
-        if (configs != null)
+        if (queueStarted)
         {
-            index = ++currentSceneryIndex % configs.sceneries.Length;
-            shuffle = configs.shuffleSceneries;
-        }
-        currentSceneryIndex = index;
-        if (currentSceneryIndex == 0 && shuffle)
-        {
-            sceneryQueue = ShuffledSceneries(sceneryQueue, new System.Random());
-        }
+            Configurations configs = Configurations.Instance();
 
-        StartCoroutine(ChangeScenery(currentSceneryIndex));
+            // Advance in the queue and shuffle it every time we start at 0
+            int index = 0;
+            bool shuffle = false;
+            if (configs != null)
+            {
+                index = ++currentSceneryIndex % configs.sceneries.Length;
+                shuffle = configs.shuffleSceneries;
+            }
+            currentSceneryIndex = index;
+            if (currentSceneryIndex == 0 && shuffle)
+            {
+                sceneryQueue = ShuffledSceneries(sceneryQueue, new System.Random());
+            }
+
+            StartCoroutine(ChangeScenery(currentSceneryIndex));
+        }
     }
 
     // Create a scenery object that's in the queue at sceneryIndex position
     private GameObject CreateScenery(int sceneryIndex)
     {
-        if (sceneryIndex >= 0 && sceneryIndex < sceneryQueue.Length)
+        if (queueStarted)
         {
-            GameObject sceneryObject = Instantiate(sceneryPrefab);
-            Scenery scenery = sceneryObject.GetComponent<Scenery>();
-            if (scenery != null)
+            if (sceneryIndex >= 0 && sceneryIndex < sceneryQueue.Length)
             {
-                scenery.LoadScenery(sceneryQueue[sceneryIndex]);
-                
-                // Call the event for changing scenery
-                if (SceneryChanged != null)
+                GameObject sceneryObject = Instantiate(sceneryPrefab);
+                Scenery scenery = sceneryObject.GetComponent<Scenery>();
+                if (scenery != null)
                 {
-                    SceneryChanged(this, new SceneryChangedEventArgs(sceneryIndex, sceneryQueue[sceneryIndex]));
+                    scenery.LoadScenery(sceneryQueue[sceneryIndex]);
+
+                    // Call the event for changing scenery
+                    if (SceneryChanged != null)
+                    {
+                        SceneryChanged(this, new SceneryChangedEventArgs(sceneryIndex, sceneryQueue[sceneryIndex]));
+                    }
                 }
+                return sceneryObject;
             }
-            return sceneryObject;
         }
         return null;
     }

@@ -19,25 +19,36 @@ public class Configurations
         }
     }
 
+
     public bool useKinectInput = true;
     public Vector3 kinectMultiplier = Vector3.one;
     public Vector3 kinectOffset = Vector3.zero;
     public float kinectSmoothing = 10;
+
     public float transitionDuration = 3;
     public Color transitionColor = Color.black;
+
     public bool handAlwaysActive = false;
     public bool multipleHandUsers = true;
     public float handActivationTime = 1;
     public float handDeactivationTime = 1;
+
     public int OscUserLocationUpdatesPerSecond = 5;
     public string OscOutputIP = "127.0.0.1";
     public int OscOutputPort = 57120;
     public int OscInputPort = 57122;
+
     public bool displayCameraFeed = false;
     public float cameraFeedAlpha = 1;
+
+    public int resolutionWidth = Screen.currentResolution.width;
+    public int resolutionHeight = Screen.currentResolution.height;
+    public bool vsync = false;
+
     public int sceneryChangeInterval = 0;
     public bool shuffleSceneries = false;
     public string[] sceneries;
+
 
     private static Configurations instance;
 

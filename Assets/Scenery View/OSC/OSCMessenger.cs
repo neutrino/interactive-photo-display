@@ -21,13 +21,14 @@ public class OSCMessenger : MonoBehaviour
     private bool preparedToChangeScenery = false;
     private int nextSceneryNumber = 0;
 
+    void Awake()
+    {
+        Configurations.Loaded += ConfigurationsLoaded;
+    }
+
     void Update()
     {
-        if (!initialized)
-        {
-            initialized = Initialize();
-        }
-        else
+        if (initialized)
         {
             // Send user locations with a certain time interval
             if (userLocationUpdateTimer > 0)
@@ -53,6 +54,11 @@ public class OSCMessenger : MonoBehaviour
                 StartCoroutine(sceneryQueue.ChangeScenery(nextSceneryNumber));
             }
         }
+    }
+
+    private void ConfigurationsLoaded(object configurations, Configurations.LoadedEventArgs loadedInfo)
+    {
+        initialized = Initialize();
     }
 
     // Create server and client and start listening to events
