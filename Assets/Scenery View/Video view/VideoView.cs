@@ -88,9 +88,12 @@ public class VideoView : MonoBehaviour
 
     private void ConfigurationsLoaded(object configurations, Configurations.LoadedEventArgs loadedInfo)
     {
-        Configurations configs = (Configurations)configurations;
-        Enable(configs.displayCameraFeed);
-        SetOpacity(configs.cameraFeedAlpha);
+        if (loadedInfo.successful)
+        {
+            Configurations configs = (Configurations)configurations;
+            Enable(configs.displayCameraFeed);
+            SetOpacity(configs.cameraFeedAlpha);
+        }
     }
 
     // Open the sensor and its color frame reader
