@@ -17,6 +17,7 @@ public class DisplaySettingManager : MonoBehaviour
             if (configs != null)
             {
                 Screen.SetResolution(configs.resolutionWidth, configs.resolutionHeight, false);
+                QualitySettings.vSyncCount = configs.vsync ? 1 : 0;
             }
         }
     }
