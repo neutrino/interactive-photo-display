@@ -72,13 +72,13 @@ public class Scenery : MonoBehaviour, SceneryObject
             if (configs.useKinectInput && bodyTracker != null)
             {
                 Kinect.Body body = bodyTracker.ActiveControllerBody();
-                Vector3 position = configs.kinectOffset;
                 if (body != null)
                 {
+                    Vector3 position = configs.kinectOffset;
                     position += -BodyTracker.BodyPosition(body);
+                    position = Vector3.Scale(position, configs.kinectMultiplier);
+                    movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * configs.kinectSmoothing);
                 }
-                position = Vector3.Scale(position, configs.kinectMultiplier);
-                movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * configs.kinectSmoothing);
             }
             // Get mouse input
             else if (Input.GetMouseButton(0))
