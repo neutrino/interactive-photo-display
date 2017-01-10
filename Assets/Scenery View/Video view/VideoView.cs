@@ -2,6 +2,10 @@
 using System.Collections;
 using Kinect = Windows.Kinect;
 
+/*
+VideoView is used to display the camera feed from the Kinect sensor on screen.
+*/
+
 public class VideoView : MonoBehaviour
 {
 
@@ -23,6 +27,7 @@ public class VideoView : MonoBehaviour
 
     void Start()
     {
+        // Disabled by default
         Enable(false);
         SetOpacity(opacity);
 
@@ -41,6 +46,7 @@ public class VideoView : MonoBehaviour
     {
         if (Enabled())
         {
+            // Scale the transform to fit on the screen and use the correct aspect ratio
             Vector3 scale = Vector3.one;
             if ((float)Camera.main.pixelWidth / (float)Camera.main.pixelHeight > (float)texture.width / (float)texture.height)
             {
@@ -61,6 +67,7 @@ public class VideoView : MonoBehaviour
         CloseKinect();
     }
 
+    // Enable or disable the video view
     public void Enable(bool enable)
     {
         MeshRenderer meshRenderer = GetComponentInChildren<MeshRenderer>();
@@ -85,7 +92,8 @@ public class VideoView : MonoBehaviour
         color.a = opacity;
         renderer.sharedMaterial.color = color;
     }
-
+    
+    // Handler for the event when configurations are loaded
     private void ConfigurationsLoaded(object configurations, Configurations.LoadedEventArgs loadedInfo)
     {
         if (loadedInfo.successful)

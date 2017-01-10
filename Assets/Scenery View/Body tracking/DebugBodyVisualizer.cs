@@ -3,6 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using Kinect = Windows.Kinect;
 
+/*
+This component can be used to help body tracking debugging
+by drawing simple graphic representations of bodies tracked by BodyTracker.
+*/
+
 public class DebugBodyVisualizer : MonoBehaviour
 {
 

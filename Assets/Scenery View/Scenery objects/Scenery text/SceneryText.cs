@@ -3,6 +3,11 @@ using System.Collections;
 using System;
 using UnityEngine.UI;
 
+/*
+SceneryText is a scenery element that draws a text on the screen.
+*/
+
+// The serialized data object for saving and loading the text element
 [System.Serializable]
 public class SceneryTextData : SceneryObjectData
 {

@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+ConfigurationLoader is a helper component used to load Configurations at startup.
+*/
+
 public class ConfigurationLoader : MonoBehaviour
 {
 

@@ -3,6 +3,11 @@ using System.Collections;
 using System;
 using UnityEngine.UI;
 
+/*
+SceneryPopUp is a scenery element that displays a text container that can be hidden and shown at will.
+*/
+
+// The serialized data object for saving and loading the pop up
 [System.Serializable]
 public class SceneryPopUpData : SceneryObjectData
 {
@@ -96,6 +101,7 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
 
     void LateUpdate()
     {
+        // Animate the icon to match the target scale
         float targetScale = iconScale;
         if (handOnIcon && !visible)
         {
@@ -103,7 +109,6 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
             handOnIcon = false;
         }
         animatedIconScale += (targetScale - animatedIconScale) * Time.deltaTime * 10;
-        //animatedIconScale = iconScale + iconAnimationScale * Mathf.Sin((Time.time * iconAnimationSpeed % 1f) * (2 * Mathf.PI));
     }
 
     public void HandOnIcon()
@@ -121,6 +126,7 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         autoHideTimer = 0;
     }
 
+    // Shows or hides the pop-up
     public void SetVisibility(bool isVisible)
     {
         if (!alwaysVisible)
@@ -146,13 +152,16 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         }
     }
 
+    // Returns true if the given point on screen is close enough to the pop-up to be interacted with.
     public bool ScreenPointCloseEnough(Vector2 pointOnScreen)
     {
+        // If the pop-up is visible, checks if the given point is within the text container rectangle
         if (visible)
         {
             Rect rect = RectangleOnScreen();
             return pointOnScreen.x >= rect.xMin && pointOnScreen.x <= rect.xMax && pointOnScreen.x >= rect.yMin && pointOnScreen.y <= rect.yMax;
         }
+        // If the pop-up is hidden, checks if the given point is within a radius from the pop-ups center point.
         else
         {
             Vector2 myPositionOnScreen = RectangleOnScreen().center;
@@ -160,6 +169,7 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         }
     }
     
+    // Returns the text container's position and size as a Rect instance
     public Rect RectangleOnScreen()
     {
         Rect rect = new Rect();
@@ -178,6 +188,7 @@ public class SceneryPopUp : MonoBehaviour, SceneryObject
         return rect;
     }
 
+    // Returns the text inside by the pop up
     public string GetText()
     {
         Text textComponent = GetComponentInChildren<Text>();

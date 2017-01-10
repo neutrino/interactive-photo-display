@@ -55,6 +55,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fileName: 
+  restrictHorizontalMovement: 0
+  restrictVerticalMovement: 0
+  transparencyColor: {r: 0, g: 0, b: 0, a: 0}
+  transparencyThreshold: 0
 --- !u!114 &114000011030714834
 MonoBehaviour:
   m_ObjectHideFlags: 1
