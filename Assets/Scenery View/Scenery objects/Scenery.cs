@@ -2,6 +2,11 @@
 using System.Collections;
 using Kinect = Windows.Kinect;
 
+/*
+Scenery represents a whole scenery with all its images and other elements. It takes care of
+loading and controlling all its scenery object elements.
+*/
+
 // The serialized data object for saving and loading the scenery
 [System.Serializable]
 public class SceneryData : SceneryObjectData
@@ -212,6 +217,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         Vector3 scale = Vector3.one * (1 + DepthMultiplier(depth) * input);
         return scale;
     }
+    // Inverse method for SceneryObjectRelativePosition
     private Vector2 InverseSceneryObjectRelativePosition(float depth, Vector3 position)
     {
         float depthMultiplier = DepthMultiplier(depth);
@@ -222,6 +228,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         }
         return Vector2.zero;
     }
+    // Inverse method for SceneryObjectRelativeScale
     private float InverseSceneryObjectRelativeScale(float depth, Vector3 scale)
     {
         float depthMultiplier = DepthMultiplier(depth);

@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using Kinect = Windows.Kinect;
 using UnityOSC;
 
+/*
+OSCMessenger uses the UnityOSC library to send and receive specific OSC messages over the network.
+*/
+
 public class OSCMessenger : MonoBehaviour
 {
 

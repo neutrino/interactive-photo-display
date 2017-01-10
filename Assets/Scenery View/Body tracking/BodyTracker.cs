@@ -3,6 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using Kinect = Windows.Kinect;
 
+/*
+BodyTracker, with the help of the Kinect library reads Kinect input to track user movements.
+*/
+
 public class BodyTracker : MonoBehaviour
 {
     public class BodyEnteredEventArgs : System.EventArgs
@@ -188,8 +192,6 @@ public class BodyTracker : MonoBehaviour
     // Handler for BodyEntered event
     private void BodyTracker_BodyEntered(object bodyTracker, BodyEnteredEventArgs bodyEnteredInfo)
     {
-        Debug.Log("Body " + bodyEnteredInfo.body.TrackingId + " has entered.");
-
         if (handPointerPrefab != null)
         {
             if (bodyEnteredInfo.body != null)
@@ -204,7 +206,6 @@ public class BodyTracker : MonoBehaviour
     // Handler for BodyLeft event
     private void BodyTracker_BodyLeft(object bodyTracker, BodyLeftEventArgs bodyLeftInfo)
     {
-        Debug.Log("Body " + bodyLeftInfo.bodyTrackingId + " has left.");
         foreach (HandPointer handPointer in FindObjectsOfType<HandPointer>())
         {
             if (handPointer.BodyTrackingId() == bodyLeftInfo.bodyTrackingId)
