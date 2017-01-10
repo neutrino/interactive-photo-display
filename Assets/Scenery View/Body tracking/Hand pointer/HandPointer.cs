@@ -2,6 +2,11 @@
 using System.Collections;
 using Kinect = Windows.Kinect;
 
+/*
+HandPointer represents a user's hand (from Kinect input) and is used to display the user's hand
+graphically on screen and to get input from hand gestures (closing and opening).
+*/
+
 public class HandPointer : MonoBehaviour
 {
     public enum Side
@@ -135,6 +140,7 @@ public class HandPointer : MonoBehaviour
         previousValidHandState = latestValidHandState;
     }
 
+    // Returns the joint that the pointer represents
     public Kinect.Joint Joint()
     {
         if (body != null)
@@ -146,6 +152,7 @@ public class HandPointer : MonoBehaviour
             throw new System.NullReferenceException();
         }
     }
+    // Returns the represented joint's type
     public Kinect.JointType JointType()
     {
         switch (side)
@@ -155,6 +162,7 @@ public class HandPointer : MonoBehaviour
             default: return Kinect.JointType.HandRight;
         }
     }
+    // Returns the current HandState
     public Kinect.HandState HandState()
     {
         if (body != null)
@@ -167,11 +175,13 @@ public class HandPointer : MonoBehaviour
         }
         return Kinect.HandState.Unknown;
     }
+    // Returns the last hand state that was considered valid (not untracked or inferred)
     public Kinect.HandState LastValidHandState()
     {
         return latestValidHandState;
     }
 
+    // Create the link between the HandPointer and a Body and its hand
     public void LinkToBody(Kinect.Body body, Side side)
     {
         this.body = body;
@@ -188,11 +198,13 @@ public class HandPointer : MonoBehaviour
         return bodyTrackingId;
     }
 
+    // Returns the hand pointers current position on the screen as values from 0 to 1 mapped on the screen
     public Vector2 PositionOnScreen()
     {
         return positionOnScreen;
     }
-        
+    
+    // Returns the position where the pointer will be attempting to move towards. This is the raw value received directly from BodyTracker.
     public Vector2 TargetPositionOnScreen()
     {
         Vector2 screenPosition = Vector2.zero;
@@ -231,6 +243,7 @@ public class HandPointer : MonoBehaviour
         if (active)
         {
             Vector2 textureSize = new Vector2(textureHandOpen.width, textureHandOpen.height) * handTextureScale;
+            // Draw a mirrored texture for the other hand
             if (side == Side.Right)
             {
                 textureSize.x *= -1;

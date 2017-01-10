@@ -2,6 +2,11 @@
 using System.Collections;
 using System;
 
+/*
+SceneryQueue manages the timing and transition between sceneries.
+It starts the queue immediately after loading Configurations.
+*/
+
 public class SceneryQueue : MonoBehaviour
 {
 
@@ -44,14 +49,6 @@ public class SceneryQueue : MonoBehaviour
         bodyTracker = FindObjectOfType<BodyTracker>();
     }
 
-    private void ConfigurationsLoaded(object configurations, Configurations.LoadedEventArgs loadedInfo)
-    {
-        if (loadedInfo.successful && !queueStarted)
-        {
-            BeginQueue();
-        }
-    }
-
     void Update()
     {
         if (queueStarted)
@@ -79,6 +76,14 @@ public class SceneryQueue : MonoBehaviour
                     }
                 }
             }
+        }
+    }
+
+    private void ConfigurationsLoaded(object configurations, Configurations.LoadedEventArgs loadedInfo)
+    {
+        if (loadedInfo.successful && !queueStarted)
+        {
+            BeginQueue();
         }
     }
 

@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+DisplaySettingManager takes care of applying display settings according to configurations.
+*/
+
 public class DisplaySettingManager : MonoBehaviour
 {
 

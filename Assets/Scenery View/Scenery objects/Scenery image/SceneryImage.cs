@@ -2,6 +2,9 @@
 using System.Collections;
 using System.IO;
 
+/*
+SceneryImage is a scenery element that displays an image in the scenery.
+*/
 
 // The serialized data object for saving and loading the scenery image
 [System.Serializable]
@@ -44,10 +47,10 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         UnloadImage();
 
         loadingCoroutine = LoadImageInBackground();
-
         StartCoroutine(loadingCoroutine);
     }
 
+    // Start loading the image asynchronously
     IEnumerator LoadImageInBackground()
     {
         imageLoaded = false;
@@ -117,6 +120,7 @@ public class SceneryImage : MonoBehaviour, SceneryObject
         imageLoaded = true;
     }
 
+    // Returns true if an image has been loaded
     public bool ImageLoaded()
     {
         return imageLoaded;
@@ -143,8 +147,7 @@ public class SceneryImage : MonoBehaviour, SceneryObject
             spriteRenderer.sprite = null;
         }
     }
-
-
+    
     private string GetAbsolutePath(string fileName)
     {
         // If the file exists, it's already an absolute path

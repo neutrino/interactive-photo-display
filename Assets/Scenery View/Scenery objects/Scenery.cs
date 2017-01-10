@@ -2,6 +2,11 @@
 using System.Collections;
 using Kinect = Windows.Kinect;
 
+/*
+Scenery represents a whole scenery with all its images and other elements. It takes care of
+loading and controlling all its scenery object elements.
+*/
+
 // The serialized data object for saving and loading the scenery
 [System.Serializable]
 public class SceneryData : SceneryObjectData
@@ -67,13 +72,13 @@ public class Scenery : MonoBehaviour, SceneryObject
             if (configs.useKinectInput && bodyTracker != null)
             {
                 Kinect.Body body = bodyTracker.ActiveControllerBody();
-                Vector3 position = configs.kinectOffset;
                 if (body != null)
                 {
+                    Vector3 position = configs.kinectOffset;
                     position += -BodyTracker.BodyPosition(body);
+                    position = Vector3.Scale(position, configs.kinectMultiplier);
+                    movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * configs.kinectSmoothing);
                 }
-                position = Vector3.Scale(position, configs.kinectMultiplier);
-                movementInput = Vector3.Slerp(movementInput, position, Time.deltaTime * configs.kinectSmoothing);
             }
             // Get mouse input
             else if (Input.GetMouseButton(0))
@@ -212,6 +217,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         Vector3 scale = Vector3.one * (1 + DepthMultiplier(depth) * input);
         return scale;
     }
+    // Inverse method for SceneryObjectRelativePosition
     private Vector2 InverseSceneryObjectRelativePosition(float depth, Vector3 position)
     {
         float depthMultiplier = DepthMultiplier(depth);
@@ -222,6 +228,7 @@ public class Scenery : MonoBehaviour, SceneryObject
         }
         return Vector2.zero;
     }
+    // Inverse method for SceneryObjectRelativeScale
     private float InverseSceneryObjectRelativeScale(float depth, Vector3 scale)
     {
         float depthMultiplier = DepthMultiplier(depth);

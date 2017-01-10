@@ -3,6 +3,11 @@ using UnityEngine.UI;
 using System.Collections;
 using System;
 
+
+/*
+AnimatedSceneryObject is a component used by scenery elements to enable the use of special animations via a shader.
+*/
+
 [System.Serializable]
 public class AnimatedSceneryObjectData : SceneryObjectData
 {

@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+SceneryTransition is a visual effect that is activated when switching to a new scenery.
+*/
+
 public class SceneryTransition : MonoBehaviour
 {
 
