@@ -53,3 +53,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   handPointerPrefab: {fileID: 1000013460369334, guid: 4f77e659c7b3d27429abd5ed113bcb18,
     type: 2}
+  activeBodyRefreshTime: 1

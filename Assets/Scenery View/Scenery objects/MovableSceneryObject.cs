@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+MovableSceneryObject is a component used by scenery elements to enable movement with the scenery.
+*/
+
 [System.Serializable]
 public class MovableSceneryObjectData : SceneryObjectData
 {

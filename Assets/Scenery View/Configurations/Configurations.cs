@@ -2,12 +2,13 @@
 
 /*
 Configurations is a class that contains session specific settings such as Kinect calibrations and scenery file paths.
-It has static methods for loading from or saving to a .json file.
+It has static methods for loading from or saving to a JSON file.
 */
 
 [System.Serializable]
 public class Configurations
 {
+    /// EventArgs for the Loaded event
     public class LoadedEventArgs : System.EventArgs
     {
         public bool successful;
@@ -19,6 +20,8 @@ public class Configurations
         }
     }
 
+
+    // Variables that are read from the JSON file
 
     public bool useKinectInput = true;
     public Vector3 kinectMultiplier = Vector3.one;
@@ -50,6 +53,7 @@ public class Configurations
     public string[] sceneries;
 
 
+    // The singleton instance
     private static Configurations instance;
 
     // Event for when configurations are loaded
