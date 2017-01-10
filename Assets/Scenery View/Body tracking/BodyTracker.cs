@@ -27,6 +27,7 @@ public class BodyTracker : MonoBehaviour
     }
 
     public GameObject handPointerPrefab;
+    public float activeBodyRefreshTime;
 
     public delegate void BodyEnteredDelegate(object bodyTracker, BodyEnteredEventArgs bodyEnteredInfo);
     public event BodyEnteredDelegate BodyEntered;
@@ -38,6 +39,7 @@ public class BodyTracker : MonoBehaviour
     private Kinect.Body[] bodyData;
     private Dictionary<ulong, Kinect.Body> trackedBodies = new Dictionary<ulong, Kinect.Body>();
 
+    private float activeBodyRefreshTimer;
     private Kinect.Body activeControllerBody;
 
     void Start()
@@ -47,6 +49,19 @@ public class BodyTracker : MonoBehaviour
         // Add handlers for body entering and leaving events
         BodyEntered += BodyTracker_BodyEntered;
         BodyLeft += BodyTracker_BodyLeft;
+    }
+
+    void Update()
+    {
+        if (activeBodyRefreshTimer > 0)
+        {
+            activeBodyRefreshTimer -= Time.deltaTime;
+        }
+        else
+        {
+            activeBodyRefreshTimer = activeBodyRefreshTime;
+            activeControllerBody = NearestBody();
+        }
     }
 
     void OnDestroy()
@@ -229,8 +244,6 @@ public class BodyTracker : MonoBehaviour
             frame.Dispose();
             frame = null;
             UpdateTrackedIds();
-
-            activeControllerBody = NearestBody();
         }
     }
 
@@ -308,6 +321,10 @@ public class BodyTracker : MonoBehaviour
             {
                 position /= trackedBodyCount;
             }
+        }
+        else
+        {
+            throw new System.NullReferenceException("Body doesn't exist");
         }
         return position;
     }
