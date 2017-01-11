@@ -250,7 +250,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e24b7a6c8c2d6b542b26947d69d26e36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  configurationsPath: C:\Users\Aapo\Dropbox\IPD build\configurations.json
+  configurationsPath: 
 --- !u!4 &1202138539
 Transform:
   m_ObjectHideFlags: 0
