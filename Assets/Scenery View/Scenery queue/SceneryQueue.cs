@@ -110,6 +110,9 @@ public class SceneryQueue : MonoBehaviour
     {
         if (queueStarted)
         {
+            // Make sure that any unused assets are unloaded from memory
+            Resources.UnloadUnusedAssets();
+
             Configurations configs = Configurations.Instance();
 
             // Check for scenery index validity
