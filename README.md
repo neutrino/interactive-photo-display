@@ -2,6 +2,8 @@
 
 Interactive Photo Displays is an application created for the Project Work and Software Project Management courses in the University of Tampere.
 
+Teemu Partanen, Ranendra Adhikari, Aapo Nikkilä, Rama Hannula, Joni Sarikoski
+
 ## Instructions for setting up the project
 The application has been developed using the game engine Unity version 5.4.1f1. Unity can be downloaded for free from https://unity3d.com/.
 
